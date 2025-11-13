@@ -1,5 +1,5 @@
 // ==========================
-// ADMIN.JS - DYNASTY ES ⚡
+// ADMIN.JS - DYNASTY ES ⚡ (Versão corrigida)
 // ==========================
 
 const { EmbedBuilder, PermissionsBitField } = require("discord.js");
@@ -27,17 +27,16 @@ module.exports.executar = async (member, message, args) => {
     const embed = new EmbedBuilder()
       .setColor("Red")
       .setDescription("🚫 Tu não tem permissão pra usar esse comando, irmão.");
-    const msg = await message.reply({ embeds: [embed] });
+    const msg = await message.channel.send({ embeds: [embed] });
     setTimeout(() => msg.delete().catch(() => {}), 5000);
     return;
   }
 
-  if (!cmd) return message.reply("❌ Comando admin inválido.");
+  if (!cmd) return message.channel.send("❌ Comando admin inválido.");
 
   try {
     switch (cmd) {
       case "regras": {
-        await message.delete().catch(() => {});
         const embed = new EmbedBuilder()
           .setTitle("📜 Regras do Dynasty ES")
           .setColor("#7d00ff")
@@ -49,97 +48,98 @@ module.exports.executar = async (member, message, args) => {
 **⚽ Gameplay:** Avaliado por desempenho + análise dos adms.`
           )
           .setFooter({ text: "Dynasty ES - Organização e respeito acima de tudo 💜" });
+        await message.delete().catch(() => {});
         return message.channel.send({ embeds: [embed] });
       }
 
       case "say": {
-        if (!subArgs.length) return message.reply("❌ Use: !say <mensagem>");
+        if (!subArgs.length) return message.channel.send("❌ Use: !say <mensagem>");
+        const msgEnviada = await message.channel.send(subArgs.join(" "));
         await message.delete().catch(() => {});
-        const msg = await message.channel.send(subArgs.join(" "));
-        setTimeout(() => msg.delete().catch(() => {}), 10000);
+        setTimeout(() => msgEnviada.delete().catch(() => {}), 10000);
         break;
       }
 
       case "sayembed": {
-        if (!subArgs.length) return message.reply("❌ Use: !sayembed <mensagem>");
-        await message.delete().catch(() => {});
+        if (!subArgs.length) return message.channel.send("❌ Use: !sayembed <mensagem>");
         const embed = new EmbedBuilder()
           .setDescription(subArgs.join(" "))
           .setColor("#7d00ff");
-        const msg = await message.channel.send({ embeds: [embed] });
-        setTimeout(() => msg.delete().catch(() => {}), 10000);
+        const msgEnviada = await message.channel.send({ embeds: [embed] });
+        await message.delete().catch(() => {});
+        setTimeout(() => msgEnviada.delete().catch(() => {}), 10000);
         break;
       }
 
       case "anunciar": {
-        if (!subArgs.length) return message.reply("❌ Use: !anunciar <mensagem>");
-        await message.delete().catch(() => {});
+        if (!subArgs.length) return message.channel.send("❌ Use: !anunciar <mensagem>");
         const embed = new EmbedBuilder()
           .setTitle("📢 Anúncio do Dynasty ES")
           .setDescription(subArgs.join(" "))
           .setColor("#7d00ff");
+        await message.delete().catch(() => {});
         return message.channel.send({ embeds: [embed] });
       }
 
       case "ban": {
-        await message.delete().catch(() => {});
         const user = message.mentions.members.first();
-        if (!user) return message.reply("❌ Mencione alguém pra banir.");
-        if (!user.bannable) return message.reply("❌ Não posso banir esse usuário (hierarquia ou permissão).");
+        if (!user) return message.channel.send("❌ Mencione alguém pra banir.");
+        if (!user.bannable) return message.channel.send("❌ Não posso banir esse usuário (hierarquia ou permissão).");
 
-        await user.ban({ reason: `Banido por ${message.author.tag}` }).catch(() => message.reply("❌ Não deu pra banir."));
+        await user.ban({ reason: `Banido por ${message.author.tag}` }).catch(() => message.channel.send("❌ Não deu pra banir."));
         const embed = new EmbedBuilder()
           .setColor("Red")
           .setDescription(`⛔ ${user.user.tag} foi **banido**.`);
+        await message.delete().catch(() => {});
         const msg = await message.channel.send({ embeds: [embed] });
         setTimeout(() => msg.delete().catch(() => {}), 5000);
         break;
       }
 
       case "kick": {
-        await message.delete().catch(() => {});
         const user = message.mentions.members.first();
-        if (!user) return message.reply("❌ Mencione alguém pra expulsar.");
-        if (!user.kickable) return message.reply("❌ Não posso expulsar esse usuário (hierarquia ou permissão).");
+        if (!user) return message.channel.send("❌ Mencione alguém pra expulsar.");
+        if (!user.kickable) return message.channel.send("❌ Não posso expulsar esse usuário (hierarquia ou permissão).");
 
-        await user.kick({ reason: `Expulso por ${message.author.tag}` }).catch(() => message.reply("❌ Não deu pra expulsar."));
+        await user.kick({ reason: `Expulso por ${message.author.tag}` }).catch(() => message.channel.send("❌ Não deu pra expulsar."));
         const embed = new EmbedBuilder()
           .setColor("Orange")
           .setDescription(`👢 ${user.user.tag} foi **expulso**.`);
+        await message.delete().catch(() => {});
         const msg = await message.channel.send({ embeds: [embed] });
         setTimeout(() => msg.delete().catch(() => {}), 5000);
         break;
       }
 
       case "mute": {
-        await message.delete().catch(() => {});
         const user = message.mentions.members.first();
-        if (!user) return message.reply("❌ Mencione alguém pra mutar.");
+        if (!user) return message.channel.send("❌ Mencione alguém pra mutar.");
         const muteRole = message.guild.roles.cache.find(r => r.name.toLowerCase() === "muted");
-        if (!muteRole) return message.reply("❌ Cargo 'Muted' não encontrado.");
-        if (user.roles.cache.has(muteRole.id)) return message.reply("❌ Usuário já está mutado.");
+        if (!muteRole) return message.channel.send("❌ Cargo 'Muted' não encontrado.");
+        if (user.roles.cache.has(muteRole.id)) return message.channel.send("❌ Usuário já está mutado.");
 
-        await user.roles.add(muteRole).catch(() => message.reply("❌ Não deu pra mutar."));
+        await user.roles.add(muteRole).catch(() => message.channel.send("❌ Não deu pra mutar."));
         const embed = new EmbedBuilder()
           .setColor("#7d00ff")
           .setDescription(`🔇 ${user.user.tag} foi **mutado**.`);
+        await message.delete().catch(() => {});
         const msg = await message.channel.send({ embeds: [embed] });
         setTimeout(() => msg.delete().catch(() => {}), 5000);
         break;
       }
 
       case "desmute": {
-        await message.delete().catch(() => {});
         const user = message.mentions.members.first();
-        if (!user) return message.reply("❌ Mencione alguém pra desmutar.");
+        if (!user) return message.channel.send("❌ Mencione alguém pra desmutar.");
         const muteRole = message.guild.roles.cache.find(r => r.name.toLowerCase() === "muted");
-        if (!muteRole) return message.reply("❌ Cargo 'Muted' não encontrado.");
-        if (!user.roles.cache.has(muteRole.id)) return message.reply("❌ Usuário não está mutado.");
+        if (!muteRole) return message.channel.send("❌ Cargo 'Muted' não encontrado.");
+        if (!user.roles.cache.has(muteRole.id)) return message.channel.send("❌ Usuário não está mutado.");
 
-        await user.roles.remove(muteRole).catch(() => message.reply("❌ Não deu pra desmutar."));
+        await user.roles.remove(muteRole).catch(() => message.channel.send("❌ Não deu pra desmutar."));
         const embed = new EmbedBuilder()
           .setColor("Green")
           .setDescription(`🔊 ${user.user.tag} foi **desmutado**.`);
+        await message.delete().catch(() => {});
         const msg = await message.channel.send({ embeds: [embed] });
         setTimeout(() => msg.delete().catch(() => {}), 5000);
         break;
@@ -147,8 +147,8 @@ module.exports.executar = async (member, message, args) => {
 
       case "limpar": {
         const qtd = parseInt(subArgs[0]);
-        if (!qtd || isNaN(qtd)) return message.reply("❌ Use: !limpar <quantidade>");
-        if (qtd > 1000) return message.reply("⚠️ Máximo permitido: **1000 mensagens**.");
+        if (!qtd || isNaN(qtd)) return message.channel.send("❌ Use: !limpar <quantidade>");
+        if (qtd > 1000) return message.channel.send("⚠️ Máximo permitido: **1000 mensagens**.");
 
         await message.delete().catch(() => {});
         let deletadas = 0;
@@ -171,15 +171,15 @@ module.exports.executar = async (member, message, args) => {
       }
 
       case "addcomando": {
-        await message.delete().catch(() => {});
-        if (subArgs.length < 2) return message.reply("❌ Use: !addcomando <nome> <resposta>");
+        if (subArgs.length < 2) return message.channel.send("❌ Use: !addcomando <nome> <resposta>");
         const dados = carregarComandos();
         const nome = subArgs[0].toLowerCase();
         const resposta = subArgs.slice(1).join(" ");
         if (dados.comandos.find(c => c.nome === nome))
-          return message.reply("❌ Esse comando já existe.");
+          return message.channel.send("❌ Esse comando já existe.");
         dados.comandos.push({ nome, resposta });
         salvarComandos(dados);
+        await message.delete().catch(() => {});
         const embed = new EmbedBuilder()
           .setColor("Green")
           .setDescription(`✅ Comando **${nome}** adicionado com sucesso!`);
@@ -190,14 +190,14 @@ module.exports.executar = async (member, message, args) => {
 
       case "remcomando":
       case "removercomando": {
-        await message.delete().catch(() => {});
-        if (!subArgs[0]) return message.reply("❌ Use: !remcomando <nome>");
+        if (!subArgs[0]) return message.channel.send("❌ Use: !remcomando <nome>");
         const dados = carregarComandos();
         const nome = subArgs[0].toLowerCase();
         const index = dados.comandos.findIndex(c => c.nome === nome);
-        if (index === -1) return message.reply("❌ Comando não encontrado.");
+        if (index === -1) return message.channel.send("❌ Comando não encontrado.");
         dados.comandos.splice(index, 1);
         salvarComandos(dados);
+        await message.delete().catch(() => {});
         const embed = new EmbedBuilder()
           .setColor("Red")
           .setDescription(`🗑️ Comando **${nome}** removido.`);
@@ -210,12 +210,12 @@ module.exports.executar = async (member, message, args) => {
         const dados = carregarComandos();
         const cmdExtra = dados.comandos.find(c => c.nome === cmd);
         if (cmdExtra) return message.channel.send(cmdExtra.resposta);
-        return message.reply("❌ Comando admin inválido.");
+        return message.channel.send("❌ Comando admin inválido.");
       }
     }
   } catch (err) {
     console.error(`Erro no comando admin (${cmd}):`, err);
-    const msg = await message.reply("❌ Erro ao executar comando admin.");
+    const msg = await message.channel.send("❌ Erro ao executar comando admin.");
     setTimeout(() => msg.delete().catch(() => {}), 5000);
   }
 };
