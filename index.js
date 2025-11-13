@@ -104,15 +104,11 @@ client.on("messageCreate", async (message) => {
 
     // ================= ADMIN =================
     const adminComandos = ["ban","kick","mute","desmute","limpar","say","sayembed","anunciar","regras","addcomando","remcomando","removercomando"];
-    if (adminComandos.includes(command)) {
-      return admin.executar(message.member, message, [command, ...args]);
-    }
+    if (adminComandos.includes(command)) return admin.executar(message.member, message, [command, ...args]);
 
     // ================= NOTAS =================
     const notasComandos = ["notas","notastabela","vernota","top","addjogador","remjogador","removerjogador","setpos","setstatus","avaliar","retirarnota","retnota","zerarnotas","addnota"];
-    if (notasComandos.includes(command)) {
-      return notas.executar(message, [command, ...args]);
-    }
+    if (notasComandos.includes(command)) return notas.executar(message, [command, ...args]);
 
     // ================= JOGOS =================
     const jogosComandos = ["jogos","jogossem","jogo","addresult","editarjogo","modificarjogos","limparjogos","addjogos","removerjogo"];
@@ -138,15 +134,56 @@ client.on("messageCreate", async (message) => {
     // ================= !COMANDOS (embed) =================
     if (command === "comandos") {
       const embed = new EmbedBuilder()
-        .setTitle("📜 Comandos do Bot")
+        .setTitle("📜 Lista de Comandos do Bot")
         .setColor("#7d00ff")
         .setDescription(
-`🛠️ Gerais: ping, serverinfo, userinfo
-📋 Notas: notas, notastabela, vernota, top, avaliar...
-⚽ Jogos: jogos, jogossem, jogo, addresult...
-🛡️ Admin: ban, kick, mute, desmute, limpar, say, sayembed, anunciar, regras`
+`🛠️ Comandos Gerais
+• ping
+• serverinfo
+• userinfo
+
+📋 Sistema de Notas
+• notas
+• notastabela
+• vernota
+• top
+• avaliar
+• addjogador
+• remjogador
+• removerjogador
+• setpos
+• setstatus
+• addnota
+• retirarnota / retnota
+• zerarnotas
+
+⚽ Jogos
+• jogos
+• jogossem
+• jogo
+• addresult
+• editarjogo
+• modificarjogos
+• limparjogos
+• addjogos
+• removerjogo
+
+🛡️ Mod/Admin
+• ban
+• kick
+• mute
+• desmute
+• limpar
+• say
+• sayembed
+• anunciar
+• regras
+• addcomando
+• remcomando
+• removercomando`
         )
         .setFooter({ text: "Dynasty ES • Feito por Razerxz" });
+
       return message.channel.send({ embeds: [embed] });
     }
 
