@@ -1,0 +1,155 @@
+{
+  "dias": [
+    {
+      "dia": "Segunda-feira",
+      "jogos": [
+        {
+          "rodada": "",
+          "data": "10/11",
+          "adversario": "Elite ES",
+          "campeonato": "Amistoso",
+          "horario": "21:10",
+          "resultado": "1x1 ⚖️"
+        },
+        {
+          "rodada": "",
+          "data": "10/11",
+          "adversario": "Firewolf Team",
+          "campeonato": "Amistoso",
+          "horario": "21:40",
+          "resultado": "5x1 ✅"
+        },
+        {
+          "rodada": 7,
+          "data": "10/11",
+          "adversario": "Skullptor",
+          "campeonato": "Initial Season",
+          "horario": "22:10",
+          "resultado": "1x0 ✅"
+        },
+        {
+          "rodada": 7,
+          "data": "10/11",
+          "adversario": "Liderpool",
+          "campeonato": "Beginning Season",
+          "horario": "22:40",
+          "resultado": "3x0 ✅"
+        },
+        {
+          "rodada": 7,
+          "data": "10/11",
+          "adversario": "Apaches",
+          "campeonato": "Initial Championship",
+          "horario": "23:10",
+          "resultado": "4x1 ✅"
+        },
+        {
+          "rodada": 7,
+          "data": "10/11",
+          "adversario": "Vago (w.o)",
+          "campeonato": "Copa João Havelange",
+          "horario": "23:40",
+          "resultado": "1x0 ✅"
+        }
+      ]
+    },
+    {
+      "dia": "Terça-feira",
+      "jogos": [
+        {
+          "rodada": "",
+          "data": "11/11",
+          "adversario": "Não Definido 1",
+          "campeonato": "Amistoso",
+          "horario": "21:10",
+          "resultado": null
+        },
+        {
+          "rodada": "11",
+          "data": "11/11",
+          "adversario": "Naza 49",
+          "campeonato": "E-BR Série B",
+          "horario": "21:40",
+          "resultado": "2x2 ⚖️"
+        },
+        {
+          "rodada": 8,
+          "data": "11/11",
+          "adversario": "Liderpool ES",
+          "campeonato": "Initial Season",
+          "horario": "22:10",
+          "resultado": null
+        },
+        {
+          "rodada": "",
+          "data": "11/11",
+          "adversario": "Não Definido",
+          "campeonato": "Amistoso",
+          "horario": "22:40",
+          "resultado": null
+        },
+        {
+          "rodada": 8,
+          "data": "11/11",
+          "adversario": "MDB Team ES",
+          "campeonato": "Initial Championship",
+          "horario": "23:10",
+          "resultado": null
+        }
+      ]
+    },
+    {
+      "dia": "Quinta-feira",
+      "jogos": [
+        {
+          "rodada": 9,
+          "data": "13/11",
+          "adversario": "TMV",
+          "campeonato": "Copa Ouro",
+          "horario": "21:10",
+          "resultado": null
+        },
+        {
+          "rodada": 12,
+          "data": "13/11",
+          "adversario": "Naza 49",
+          "campeonato": "E-BR Série B",
+          "horario": "21:40",
+          "resultado": "2x2 ⚖️"
+        },
+        {
+          "rodada": "9",
+          "data": "13/11",
+          "adversario": "Familia FC",
+          "campeonato": "Initial Season",
+          "horario": "22:10",
+          "resultado": null
+        },
+        {
+          "rodada": "8",
+          "data": "13/11",
+          "adversario": "UDA BR",
+          "campeonato": "Beginning Season",
+          "horario": "22:40",
+          "resultado": null
+        },
+        {
+          "rodada": 9,
+          "data": "13/11",
+          "adversario": "Vikings Gaming",
+          "campeonato": "Initial Championship",
+          "horario": "23:10",
+          "resultado": null
+        },
+        {
+          "rodada": 9,
+          "data": "13/11",
+          "adversario": "Vikings Gaming",
+          "campeonato": "Copa João Havelange",
+          "horario": "23:40",
+          "resultado": null
+        }
+      ]
+    }
+  ]
+}

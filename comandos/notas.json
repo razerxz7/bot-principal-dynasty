@@ -1,0 +1,269 @@
+{
+  "Berrio": {
+    "pontualidade": 3,
+    "disponibilidade": 2,
+    "respeito": 2,
+    "builds": 3,
+    "gameplay": 3,
+    "total": 13,
+    "status": "✅ Titular",
+    "posicao": "ALA/ST",
+    "posicoes": [
+      "ALA",
+      "ST"
+    ]
+  },
+  "Brum": {
+    "pontualidade": 1,
+    "disponibilidade": 3,
+    "respeito": 3,
+    "builds": 3,
+    "gameplay": 4,
+    "total": 14,
+    "status": "✅ Titular",
+    "posicao": "MC/ST",
+    "posicoes": [
+      "MC",
+      "ST"
+    ]
+  },
+  "Gabriel": {
+    "pontualidade": 2,
+    "disponibilidade": 2,
+    "respeito": 3,
+    "builds": 2,
+    "gameplay": 3,
+    "total": 12,
+    "status": "✅ Titular",
+    "posicao": "ZAG",
+    "posicoes": [
+      "ZAG"
+    ]
+  },
+  "Gb": {
+    "pontualidade": 2,
+    "disponibilidade": 2,
+    "respeito": 2,
+    "builds": 2,
+    "gameplay": 3,
+    "total": 11,
+    "status": "⚔️ Disputa posição",
+    "posicao": "MC/ST",
+    "posicoes": [
+      "ST",
+      "MC"
+    ]
+  },
+  "Gerrard": {
+    "pontualidade": 2,
+    "disponibilidade": 1,
+    "respeito": 2,
+    "builds": 2,
+    "gameplay": 2,
+    "total": 9,
+    "status": "⚔️ Disputa posição",
+    "posicao": "ALA",
+    "posicoes": [
+      "ALA"
+    ]
+  },
+  "Hip": {
+    "pontualidade": 2,
+    "disponibilidade": 3,
+    "respeito": 3,
+    "builds": 2,
+    "gameplay": 4,
+    "total": 14,
+    "status": "✅ Titular",
+    "posicao": "Indefinido",
+    "posicoes": [
+      "MC",
+      "ST",
+      "ALA"
+    ]
+  },
+  "Leo": {
+    "pontualidade": 3,
+    "disponibilidade": 2,
+    "respeito": 2,
+    "builds": 1,
+    "gameplay": 2,
+    "total": 10,
+    "status": "⚔️ Disputa posição",
+    "posicao": "ST",
+    "posicoes": [
+      "ST"
+    ]
+  },
+  "Loro": {
+    "pontualidade": 1,
+    "disponibilidade": 1,
+    "respeito": 3,
+    "builds": 2,
+    "gameplay": 2,
+    "total": 9,
+    "status": "⚔️ Disputa posição",
+    "posicao": "ALA",
+    "posicoes": [
+      "ALA"
+    ]
+  },
+  "Neves": {
+    "pontualidade": 2,
+    "disponibilidade": 3,
+    "respeito": 2,
+    "builds": 2,
+    "gameplay": 3,
+    "total": 12,
+    "status": "⚔️ Disputa posição",
+    "posicao": "ST",
+    "posicoes": [
+      "ST"
+    ]
+  },
+  "Pietro": {
+    "pontualidade": 2,
+    "disponibilidade": 0,
+    "respeito": 2,
+    "builds": 1,
+    "gameplay": 3,
+    "total": 8,
+    "status": "❌ Reserva",
+    "posicao": "ZAG",
+    "posicoes": [
+      "ZAG"
+    ]
+  },
+  "Razer": {
+    "pontualidade": 3,
+    "disponibilidade": 2,
+    "respeito": 2,
+    "builds": 3,
+    "gameplay": 2,
+    "total": 12,
+    "status": "✅ Titular",
+    "posicao": "ALA",
+    "posicoes": [
+      "ALA",
+      "ZAG"
+    ]
+  },
+  "Skunk": {
+    "pontualidade": 2,
+    "disponibilidade": 2,
+    "respeito": 1,
+    "builds": 3,
+    "gameplay": 2,
+    "total": 10,
+    "status": "⚔️ Disputa posição",
+    "posicao": "MC",
+    "posicoes": [
+      "MC"
+    ]
+  },
+  "Takinha": {
+    "pontualidade": 2,
+    "disponibilidade": 2,
+    "respeito": 1,
+    "builds": 4,
+    "gameplay": 3,
+    "total": 12,
+    "status": "✅ Titular",
+    "posicao": "ZAG",
+    "posicoes": [
+      "ZAG"
+    ]
+  },
+  "Toledo": {
+    "pontualidade": 3,
+    "disponibilidade": 0,
+    "respeito": 3,
+    "builds": 2,
+    "gameplay": 3,
+    "total": 11,
+    "status": "⚔️ Disputa posição",
+    "posicao": "MC",
+    "posicoes": [
+      "MC"
+    ]
+  },
+  "Vital": {
+    "pontualidade": 2,
+    "disponibilidade": 2,
+    "respeito": 2,
+    "builds": 2,
+    "gameplay": 4,
+    "total": 12,
+    "status": "✅ Titular",
+    "posicao": "ST",
+    "posicoes": [
+      "ST"
+    ]
+  },
+  "Wallace": {
+    "pontualidade": 2,
+    "disponibilidade": 1,
+    "respeito": 2,
+    "builds": 2,
+    "gameplay": 3,
+    "total": 10,
+    "status": "⚔️ Disputa posição",
+    "posicao": "ZAG",
+    "posicoes": [
+      "ZAG"
+    ]
+  },
+  "Xamu": {
+    "pontualidade": 1,
+    "disponibilidade": 2,
+    "respeito": 2,
+    "builds": 2,
+    "gameplay": 2,
+    "total": 9,
+    "status": "⚔️ Disputa posição",
+    "posicao": "ALA",
+    "posicoes": [
+      "ALA",
+      "MC"
+    ]
+  },
+  "Xand": {
+    "pontualidade": 3,
+    "disponibilidade": 1,
+    "respeito": 3,
+    "builds": 3,
+    "gameplay": 4,
+    "total": 14,
+    "status": "✅ Titular",
+    "posicao": "ZAG",
+    "posicoes": [
+      "ZAG"
+    ]
+  },
+  "Iguin": {
+    "pontualidade": 3,
+    "disponibilidade": 3,
+    "respeito": 0,
+    "builds": 3,
+    "gameplay": 3,
+    "total": 12,
+    "status": "✅ Titular",
+    "posicao": "MC",
+    "posicoes": [
+      "MC"
+    ]
+  },
+  "Paiol": {
+    "pontualidade": 3,
+    "disponibilidade": 1,
+    "respeito": 2,
+    "builds": 3,
+    "gameplay": 4,
+    "total": 13,
+    "status": "✅ Titular",
+    "posicao": "GOL",
+    "posicoes": [
+      "GK"
+    ]
+  }
+}
