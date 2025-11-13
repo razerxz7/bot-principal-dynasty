@@ -16,5 +16,7 @@
   "dependencies": {
     "discord.js": "^14.24.2",
     "express": "^5.1.0"
+    "axios": "^1.6.0"
+    "cheerios": "^1.0.0"
   }
 }
