@@ -85,7 +85,9 @@ module.exports.executar = async (member, message, args) => {
         await message.delete().catch(() => {});
         const user = message.mentions.members.first();
         if (!user) return message.reply("❌ Mencione alguém pra banir.");
-        await user.ban().catch(() => message.reply("❌ Não deu pra banir."));
+        if (!user.bannable) return message.reply("❌ Não posso banir esse usuário (hierarquia ou permissão).");
+
+        await user.ban({ reason: `Banido por ${message.author.tag}` }).catch(() => message.reply("❌ Não deu pra banir."));
         const embed = new EmbedBuilder()
           .setColor("Red")
           .setDescription(`⛔ ${user.user.tag} foi **banido**.`);
@@ -98,7 +100,9 @@ module.exports.executar = async (member, message, args) => {
         await message.delete().catch(() => {});
         const user = message.mentions.members.first();
         if (!user) return message.reply("❌ Mencione alguém pra expulsar.");
-        await user.kick().catch(() => message.reply("❌ Não deu pra expulsar."));
+        if (!user.kickable) return message.reply("❌ Não posso expulsar esse usuário (hierarquia ou permissão).");
+
+        await user.kick({ reason: `Expulso por ${message.author.tag}` }).catch(() => message.reply("❌ Não deu pra expulsar."));
         const embed = new EmbedBuilder()
           .setColor("Orange")
           .setDescription(`👢 ${user.user.tag} foi **expulso**.`);
@@ -113,6 +117,8 @@ module.exports.executar = async (member, message, args) => {
         if (!user) return message.reply("❌ Mencione alguém pra mutar.");
         const muteRole = message.guild.roles.cache.find(r => r.name.toLowerCase() === "muted");
         if (!muteRole) return message.reply("❌ Cargo 'Muted' não encontrado.");
+        if (user.roles.cache.has(muteRole.id)) return message.reply("❌ Usuário já está mutado.");
+
         await user.roles.add(muteRole).catch(() => message.reply("❌ Não deu pra mutar."));
         const embed = new EmbedBuilder()
           .setColor("#7d00ff")
@@ -128,6 +134,8 @@ module.exports.executar = async (member, message, args) => {
         if (!user) return message.reply("❌ Mencione alguém pra desmutar.");
         const muteRole = message.guild.roles.cache.find(r => r.name.toLowerCase() === "muted");
         if (!muteRole) return message.reply("❌ Cargo 'Muted' não encontrado.");
+        if (!user.roles.cache.has(muteRole.id)) return message.reply("❌ Usuário não está mutado.");
+
         await user.roles.remove(muteRole).catch(() => message.reply("❌ Não deu pra desmutar."));
         const embed = new EmbedBuilder()
           .setColor("Green")
