@@ -15,7 +15,7 @@ const jogos = require("./comandos/jogos.js");
 const prefix = "!";
 
 // ================= CONFIG ALERTA =================
-const ALERT_CHANNEL_ID = "1438189657954189503"; // substitui pelo ID do canal que vai receber alerta
+const ALERT_CHANNEL_ID = "1438189657954189503"; 
 const TEMPO_LIMITE = 10 * 60 * 1000; // 10 minutos sem ping
 let ultimoPing = null;
 
@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const urlPublica = process.env.PUBLIC_URL || "https://dyn-bot.onrender.com"; // colocar URL do Render no env
+const urlPublica = process.env.PUBLIC_URL || "https://dyn-bot.onrender.com";
 
 app.listen(PORT, () => {
   console.log(`🌐 Servidor rodando na porta ${PORT}`);
@@ -69,27 +69,24 @@ client.once("ready", () => {
 // ===== ALERTA DE INATIVIDADE ======
 setInterval(() => {
   if (!ultimoPing) return;
-  const agora = new Date();
-  const diff = agora - ultimoPing;
+  const diff = new Date() - ultimoPing;
 
   if (diff > TEMPO_LIMITE) {
-    console.log(`⚠️ Último ping foi há mais de ${TEMPO_LIMITE/60000} minutos!`);
+    console.log(`⚠️ Último ping > ${TEMPO_LIMITE/60000} min`);
     const canal = client.channels.cache.get(ALERT_CHANNEL_ID);
-    if (canal) {
-      canal.send(`⚠️ Atenção! Bot pode estar offline! Último ping recebido há mais de ${TEMPO_LIMITE/60000} minutos.`);
-    }
+    if (canal) canal.send(`⚠️ Atenção! Bot pode estar offline! Último ping > ${TEMPO_LIMITE/60000} min.`);
   } else {
-    console.log(`✅ Ping ok - último recebido há ${Math.floor(diff/1000)}s`);
+    console.log(`✅ Ping ok - último há ${Math.floor(diff/1000)}s`);
   }
-}, 1 * 60 * 1000);
+}, 60 * 1000);
 
-// ===== util pra ler comandos custom com validação =====
+// ===== UTIL PARA COMANDOS CUSTOM =====
 function getComandoCustom(command) {
-  const comandosCustomFile = path.join(__dirname, "comandosCustom.json");
-  if (!fs.existsSync(comandosCustomFile)) return null;
+  const file = path.join(__dirname, "comandosCustom.json");
+  if (!fs.existsSync(file)) return null;
   try {
-    const data = JSON.parse(fs.readFileSync(comandosCustomFile, "utf8"));
-    if (!data.comandosCustom || !Array.isArray(data.comandosCustom)) return null;
+    const data = JSON.parse(fs.readFileSync(file, "utf8"));
+    if (!Array.isArray(data.comandosCustom)) return null;
     return data.comandosCustom.find(c => (c.nome || "").toLowerCase() === command);
   } catch (e) {
     console.error("❌ Erro ao ler comandosCustom.json:", e);
@@ -100,118 +97,65 @@ function getComandoCustom(command) {
 // ====== EVENTO PRINCIPAL ======
 client.on("messageCreate", async (message) => {
   try {
-    if (message.author.bot) return;
-    if (!message.content.startsWith(prefix)) return;
+    if (message.author.bot || !message.content.startsWith(prefix)) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const command = (args.shift() || "").toLowerCase();
 
-    // ================= ADMIN + MOD =================
-    const adminComandos = [
-      "ban", "kick", "mute", "desmute", "limpar",
-      "say", "sayembed", "anunciar", "regras",
-      "addcomando", "remcomando", "removercomando"
-    ];
-
+    // ================= ADMIN =================
+    const adminComandos = ["ban","kick","mute","desmute","limpar","say","sayembed","anunciar","regras","addcomando","remcomando","removercomando"];
     if (adminComandos.includes(command)) {
-      try {
-        await admin.executar(message.member, message, [command, ...args]);
-      } catch (err) {
-        console.error(`❌ Erro no comando admin (${command}):`, err);
-        message.reply("❌ Erro ao executar esse comando.");
-      }
-      return;
+      return admin.executar(message.member, message, [command, ...args]);
     }
 
-    // ================= SISTEMA DE NOTAS =================
-    const notasComandos = [
-      "notas", "notastabela", "vernota", "top",
-      "addjogador", "remjogador", "removerjogador",
-      "setpos", "setstatus", "avaliar", "retirarnota", "retnota", "zerarnotas", "addnota"
-    ];
-
+    // ================= NOTAS =================
+    const notasComandos = ["notas","notastabela","vernota","top","addjogador","remjogador","removerjogador","setpos","setstatus","avaliar","retirarnota","retnota","zerarnotas","addnota"];
     if (notasComandos.includes(command)) {
-      try {
-        await notas.executar(message, [command, ...args]);
-      } catch (err) {
-        console.error(`❌ Erro no comando notas (${command}):`, err);
-        message.reply("❌ Erro ao executar comando de notas.");
-      }
-      return;
+      return notas.executar(message, [command, ...args]);
     }
 
-    // ================= COMANDOS DE JOGOS =================
-    const jogosComandos = [
-      "jogos", "jogossem", "jogo", "addresult",
-      "editarjogo", "modificarjogos", "limparjogos",
-      "addjogos", "removerjogo"
-    ];
-
+    // ================= JOGOS =================
+    const jogosComandos = ["jogos","jogossem","jogo","addresult","editarjogo","modificarjogos","limparjogos","addjogos","removerjogo"];
     if (jogosComandos.includes(command)) {
-      try {
-        if (command === "jogos") await jogos.jogos(message);
-        else if (command === "jogossem") await jogos.jogossem(message);
-        else if (command === "jogo") await jogos.jogo(message, args);
-        else if (command === "addresult") await jogos.addresult(message, args);
-        else if (command === "editarjogo") await jogos.editarjogo(message, args);
-        else if (command === "modificarjogos") await jogos.modificarjogos(message, args);
-        else if (command === "limparjogos") await jogos.limparjogos(message);
-        else if (command === "addjogos") await jogos.addjogos(message, args);
-        else if (command === "removerjogo") await jogos.removerjogo(message, args);
-      } catch (err) {
-        console.error(`❌ Erro no comando jogos (${command}):`, err);
-        message.reply("❌ Erro ao executar comando de jogos.");
-      }
+      if (command === "jogos") await jogos.jogos(message);
+      else if (command === "jogossem") await jogos.jogossem(message);
+      else await jogos[command](message, args);
       return;
     }
 
     // ================= COMANDOS GERAIS =================
-    if (command === "ping") {
-      message.delete().catch(() => {});
-      return message.channel.send("✅ To online e funcionando!");
-    }
-
-    if (command === "serverinfo") {
-      return message.reply(
-        `📊 Servidor: **${message.guild.name}**\n👥 Membros: **${message.guild.memberCount}**\n🆔 ID: ${message.guild.id}`
-      );
-    }
-
+    if (command === "ping") return message.channel.send("✅ To online e funcionando!");
+    if (command === "serverinfo") return message.reply(`📊 Servidor: **${message.guild.name}**\n👥 Membros: **${message.guild.memberCount}**\n🆔 ID: ${message.guild.id}`);
     if (command === "userinfo") {
       const user = message.mentions.users.first() || message.author;
-      return message.reply(
-        `👤 Usuário: **${user.username}**\n🆔 ID: ${user.id}\n📅 Criado em: ${user.createdAt.toLocaleDateString()}`
-      );
+      return message.reply(`👤 Usuário: **${user.username}**\n🆔 ID: ${user.id}\n📅 Criado em: ${user.createdAt.toLocaleDateString()}`);
     }
 
     // ================= COMANDOS CUSTOM =================
     const cmdCustom = getComandoCustom(command);
-    if (cmdCustom) {
-      message.delete().catch(() => {});
-      return message.channel.send(cmdCustom.resposta);
-    }
+    if (cmdCustom) return message.channel.send(cmdCustom.resposta);
 
-    // ================= COMANDOS: !COMANDOS (embed) =================
+    // ================= !COMANDOS (embed) =================
     if (command === "comandos") {
-      message.delete().catch(() => {});
-
       const embed = new EmbedBuilder()
-        .setTitle("📜 Lista de Comandos do Bot")
+        .setTitle("📜 Comandos do Bot")
         .setColor("#7d00ff")
-        .setDescription("🛠️ Comandos Gerais...\n📋 Sistema de Notas...\n⚽ Jogos...\n🛡️ Mod/Admin...")
+        .setDescription(
+`🛠️ Gerais: ping, serverinfo, userinfo
+📋 Notas: notas, notastabela, vernota, top, avaliar...
+⚽ Jogos: jogos, jogossem, jogo, addresult...
+🛡️ Admin: ban, kick, mute, desmute, limpar, say, sayembed, anunciar, regras`
+        )
         .setFooter({ text: "Dynasty ES • Feito por Razerxz" });
-
       return message.channel.send({ embeds: [embed] });
     }
 
   } catch (err) {
-    console.error("❌ Erro no messageCreate (index):", err);
-    try { message.reply("❌ Ocorreu um erro interno."); } catch(e){}
+    console.error("❌ Erro no messageCreate:", err);
+    message.reply("❌ Ocorreu um erro interno.").catch(() => {});
   }
 });
 
 // ====== LOGIN ======
 console.log("🔑 Tentando logar no bot...");
-client.login(process.env.TOKEN).catch(err => {
-  console.error("❌ Falha ao logar no Discord:", err);
-});
+client.login(process.env.TOKEN).catch(err => console.error("❌ Falha ao logar:", err));
