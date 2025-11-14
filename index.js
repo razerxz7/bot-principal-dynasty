@@ -11,7 +11,7 @@ const path = require("path");
 // ==== IMPORT DOS COMANDOS ====
 const admin = require("./comandos/admin.js");
 const notas = require("./comandos/notas.js");
-const jogos = require("./comandos/jogos.js"); // <-- NOVO FETCH AUTO
+const jogos = require("./comandos/jogos.js"); // AUTO LBE
 
 const prefix = "!";
 
@@ -30,25 +30,27 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const urlPublica = process.env.PUBLIC_URL || "https://dyn-bot.onrender.com";
+const urlPublica = process.env.PUBLIC_URL || null;
 
 app.listen(PORT, () => {
   console.log(`🌐 Servidor rodando na porta ${PORT}`);
-  console.log(`🌐 URL pública (Uptime): ${urlPublica}`);
+  if (urlPublica) console.log(`🌐 URL pública (Uptime): ${urlPublica}`);
 });
 
 // ===== AUTO-PING ======
-setInterval(() => {
-  try {
-    https.get(urlPublica, (res) => {
-      console.log(`🔄 Ping enviado - Status: ${res.statusCode} - ${new Date().toLocaleTimeString()}`);
-    }).on("error", (err) => {
-      console.error("❌ Erro ao pingar URL:", err);
-    });
-  } catch (e) {
-    console.error("❌ Erro no ping automático:", e);
-  }
-}, 5 * 60 * 1000);
+if (urlPublica) {
+  setInterval(() => {
+    try {
+      https.get(urlPublica, (res) => {
+        console.log(`🔄 Ping enviado - Status: ${res.statusCode} - ${new Date().toLocaleTimeString()}`);
+      }).on("error", (err) => {
+        console.error("❌ Erro ao pingar URL:", err);
+      });
+    } catch (e) {
+      console.error("❌ Erro no ping automático:", e);
+    }
+  }, 5 * 60 * 1000);
+}
 
 // ===== CONFIG DO CLIENT (BOT) =====
 const client = new Client({
@@ -68,13 +70,17 @@ client.once("ready", () => {
 });
 
 // ===== ALERTA OFFLINE =====
+let alertaEnviado = false;
 setInterval(() => {
   if (!ultimoPing) return;
   const diff = new Date() - ultimoPing;
 
-  if (diff > TEMPO_LIMITE) {
+  if (diff > TEMPO_LIMITE && !alertaEnviado) {
     const canal = client.channels.cache.get(ALERT_CHANNEL_ID);
     if (canal) canal.send("⚠️ O bot pode ter ficado offline! Render sem ping!");
+    alertaEnviado = true;
+  } else if (diff <= TEMPO_LIMITE) {
+    alertaEnviado = false;
   }
 }, 60 * 1000);
 
@@ -122,9 +128,8 @@ client.on("messageCreate", async (message) => {
       "jogos","jogossem","jogo","addresult","editarjogo",
       "modificarjogos","limparjogos","addjogos","removerjogo","updatejogos","jogosprox"
     ];
-
     if (jogosComandos.includes(command)) {
-      if (command === "jogos") return jogos.jogos(message); // AUTO LBE
+      if (command === "jogos") return jogos.jogos(message, args);
       else return jogos[command](message, args);
     }
 
