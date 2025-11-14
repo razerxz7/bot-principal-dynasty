@@ -11,7 +11,8 @@ const path = require("path");
 // ==== IMPORT DOS COMANDOS ====
 const admin = require("./comandos/admin.js");
 const notas = require("./comandos/notas.js");
-const jogos = require("./comandos/jogos.js"); // AUTO LBE
+const jogos = require("./comandos/jogos.js");      // Comandos manuais
+const jogosLBE = require("./comandos/jogoslbe.js"); // Fetch LBE
 
 const prefix = "!";
 
@@ -123,14 +124,23 @@ client.on("messageCreate", async (message) => {
     if (notasComandos.includes(command))
       return notas.executar(message, [command, ...args]);
 
-    // ========== JOGOS (AUTO LBE) ==========
-    const jogosComandos = [
-      "jogos","jogossem","jogo","addresult","editarjogo",
-      "modificarjogos","limparjogos","addjogos","removerjogo","updatejogos","jogosprox"
+    // ========== JOGOS MANUAIS ==========
+    const jogosManuais = [
+      "addresult","editarjogo","modificarjogos","limparjogos",
+      "addjogos","removerjogo"
     ];
-    if (jogosComandos.includes(command)) {
-      if (command === "jogos") return jogos.jogos(message, args);
-      else return jogos[command](message, args);
+    if (jogosManuais.includes(command)) {
+      if (typeof jogos[command] === "function") return jogos[command](message, args);
+      else return message.reply("❌ Comando manual de jogos não encontrado.");
+    }
+
+    // ========== JOGOS LBE ==========
+    const jogosLBEComandos = [
+      "jogos","jogossem","jogosprox","updatejogos"
+    ];
+    if (jogosLBEComandos.includes(command)) {
+      if (typeof jogosLBE[command] === "function") return jogosLBE[command](message, args);
+      else return message.reply("❌ Comando LBE não encontrado.");
     }
 
     // ========== COMANDOS GERAIS ==========
@@ -161,20 +171,20 @@ client.on("messageCreate", async (message) => {
 • addjogador • remjogador  
 • setpos • setstatus • zerarnotas  
 
-⚽ Jogos (Auto LBE)  
-• jogos (auto-fetch real da LBE)  
+⚽ Jogos  
+• jogos (auto LBE)  
 • jogossem  
 • jogosprox  
-• jogo  
 • addresult • editarjogo  
 • modificarjogos  
-• limparjogos • addjogos • removerjogo  
+• limparjogos  
+• addjogos • removerjogo  
 • updatejogos
 
 🛡 Admin  
 • ban • kick • mute • desmute  
 • say • sayembed • anunciar  
-• regras • addcomando • removercomando  
+• regras • addcomando • removercomando
         `)
         .setFooter({ text: "Dynasty ES • Bot Oficial" });
 
