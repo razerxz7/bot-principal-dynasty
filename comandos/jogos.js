@@ -8,12 +8,10 @@ const { EmbedBuilder } = require("discord.js");
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-const caminhoJogos = path.join(__dirname, "../jogos.json"); // ajusta se teu index usar outro caminho
+const caminhoJogos = path.join(__dirname, "../jogos.json");
 
 // ===== CONFIG =====
-// IDs dos campeonatos na LBE que tu quer buscar
 const CHAMP_IDS = [37, 39, 42, 43, 44, 45];
-// Map opcional de id -> nome (ajusta conforme quiser)
 const CHAMP_MAP = {
   37: "Copa Ouro",
   39: "E-Brasileirão Série B",
@@ -22,7 +20,6 @@ const CHAMP_MAP = {
   44: "Initial Championship",
   45: "Copa João Havelange"
 };
-// ID do time (usado pra detectar qual lado é o Dynasty). Se não souber, mantém 363 como tu disse.
 const TEAM_ID = "363";
 
 // ===== util: ler/escrever json =====
@@ -43,7 +40,6 @@ function salvarJogos(dados) {
 
 // ===== util: pega nome do dia da semana a partir de dd/mm/yyyy =====
 function weekdayPTFromDateStr(dateStr) {
-  // espera dd/mm ou dd/mm/yyyy
   try {
     const parts = dateStr.split("/").map(p => p.trim());
     if (parts.length < 2) return "Indefinido";
@@ -58,17 +54,14 @@ function weekdayPTFromDateStr(dateStr) {
   }
 }
 
-// ===== helper: faz fetch da página da LBE e parseia jogos =====
+// ===== helper: fetch LBE =====
 async function fetchCampeonato(id) {
   const url = `https://www.lbesports.com/AreadoPlayer/areadoplayer.php?file=agendadotime&campeonato=${id}`;
   try {
     const res = await axios.get(url, { timeout: 10000 });
     const $ = cheerio.load(res.data);
-
-    // estrutura genérica: percorre blocos de jogos / linhas
     const jogos = [];
 
-    // Muitas páginas usam linhas <tr> com 3 colunas: timeA | info | timeB
     $("table tr").each((i, tr) => {
       const tds = $(tr).find("td");
       if (tds.length >= 3) {
@@ -76,30 +69,22 @@ async function fetchCampeonato(id) {
         const center = $(tds[1]).text().trim().replace(/\s+/g, " ");
         const right = $(tds[2]).text().trim().replace(/\s+/g, " ");
 
-        // extrai placar se existir
         const scoreMatch = center.match(/(\d+)\s*[Xx×]\s*(\d+)/);
         const placar = scoreMatch ? `${scoreMatch[1]}x${scoreMatch[2]}` : null;
 
-        // extrai data/hora (tenta formatos dd/mm/yyyy HH:MM ou dd/mm HH:MM)
         let data = null, horario = null;
         const datetimeMatch = center.match(/(\d{2}\/\d{2}(?:\/\d{4})?)\s+(\d{2}:\d{2})/);
         if (datetimeMatch) {
           data = datetimeMatch[1];
           horario = datetimeMatch[2];
-        } else {
-          // tenta só hora
-          const timeOnly = center.match(/(\d{2}:\d{2})/);
-          if (timeOnly) horario = timeOnly[1];
         }
 
-        // tenta extrair links para detectar team ids (se houver)
         const leftHref = $(tds[0]).find("a").attr("href") || "";
         const rightHref = $(tds[2]).find("a").attr("href") || "";
 
         const leftIsUs = (leftHref && leftHref.includes(`time=${TEAM_ID}`)) || (left && left.toLowerCase().includes("dynasty"));
         const rightIsUs = (rightHref && rightHref.includes(`time=${TEAM_ID}`)) || (right && right.toLowerCase().includes("dynasty"));
 
-        // resultado emoji para nosso time (se placar existir)
         let emoji = "❔";
         if (placar && (leftIsUs || rightIsUs)) {
           const parts = placar.split(/[xX]/).map(p => parseInt(p.trim(), 10));
@@ -111,7 +96,6 @@ async function fetchCampeonato(id) {
           }
         }
 
-        // monta objeto padrão
         jogos.push({
           rodada: null,
           campeonatoId: id,
@@ -127,85 +111,26 @@ async function fetchCampeonato(id) {
         });
       }
     });
-
-    // tentativa alternativa: alguns HTMLs mostram blocos com .card - tenta parsear também
-    $(".card.shadow.col-xl-12").each((i, card) => {
-      const header = $(card).find(".card-header").text().trim();
-      const rodadaMatch = header.match(/Rodada[:\s]*([0-9]+)/i);
-      const rodada = rodadaMatch ? rodadaMatch[1] : null;
-
-      $(card).find("table tr").each((j, tr) => {
-        const tds = $(tr).find("td");
-        if (tds.length >= 3) {
-          const left = $(tds[0]).text().trim().replace(/\s+/g, " ");
-          const center = $(tds[1]).text().trim().replace(/\s+/g, " ");
-          const right = $(tds[2]).text().trim().replace(/\s+/g, " ");
-
-          const scoreMatch = center.match(/(\d+)\s*[Xx×]\s*(\d+)/);
-          const placar = scoreMatch ? `${scoreMatch[1]}x${scoreMatch[2]}` : null;
-          let data = null, horario = null;
-          const datetimeMatch = center.match(/(\d{2}\/\d{2}(?:\/\d{4})?)\s+(\d{2}:\d{2})/);
-          if (datetimeMatch) {
-            data = datetimeMatch[1];
-            horario = datetimeMatch[2];
-          }
-          const leftHref = $(tds[0]).find("a").attr("href") || "";
-          const rightHref = $(tds[2]).find("a").attr("href") || "";
-          const leftIsUs = (leftHref && leftHref.includes(`time=${TEAM_ID}`)) || (left && left.toLowerCase().includes("dynasty"));
-          const rightIsUs = (rightHref && rightHref.includes(`time=${TEAM_ID}`)) || (right && right.toLowerCase().includes("dynasty"));
-
-          let emoji = "❔";
-          if (placar && (leftIsUs || rightIsUs)) {
-            const parts = placar.split(/[xX]/).map(p => parseInt(p.trim(), 10));
-            if (parts.length === 2) {
-              const [l, r] = parts;
-              const us = leftIsUs ? l : r;
-              const op = leftIsUs ? r : l;
-              emoji = us > op ? "✅" : us < op ? "❌" : "⚖️";
-            }
-          }
-
-          jogos.push({
-            rodada: rodada || null,
-            campeonatoId: id,
-            campeonato: CHAMP_MAP[id] || `Campeonato ${id}`,
-            leftName: left || null,
-            rightName: right || null,
-            data,
-            horario,
-            placar,
-            resultadoEmoji: emoji,
-            leftHref,
-            rightHref
-          });
-        }
-      });
-    });
-
     return jogos;
   } catch (err) {
-    // falha no fetch -> retorna null (quem chamar decide fallback)
-    console.error(`Erro ao buscar LBE (campeonato ${id}):`, err.message);
+    console.error(`Erro LBE (campeonato ${id}):`, err.message);
     return null;
   }
 }
 
-// ===== comando: updatejogos -> busca LBE e salva em jogos.json =====
+// ===== fetch + salvar =====
 async function updateJogosFromLBE() {
-  const all = {}; // chave: dia (segunda-feira etc) -> array de jogos
+  const all = {};
   for (const cid of CHAMP_IDS) {
     const arr = await fetchCampeonato(cid);
     if (!arr) continue;
     for (const j of arr) {
-      // j.data provavelmente "dd/mm" ou "dd/mm/yyyy" -> transforma em dia da semana
       const dayName = j.data ? weekdayPTFromDateStr(j.data) : "Indefinido";
       if (!all[dayName]) all[dayName] = [];
       all[dayName].push({
         rodada: j.rodada || "",
         data: j.data || "",
         adversario: (j.leftName && j.leftName.toLowerCase().includes("dynasty")) ? j.rightName : j.leftName,
-        adversario_full_left: j.leftName || "",
-        adversario_full_right: j.rightName || "",
         campeonato: j.campeonato || CHAMP_MAP[j.campeonatoId] || `Campeonato ${j.campeonatoId}`,
         horario: j.horario || "",
         resultado: j.placar ? `${j.placar} ${j.resultadoEmoji||""}` : null,
@@ -213,8 +138,6 @@ async function updateJogosFromLBE() {
       });
     }
   }
-
-  // transformar em formato { dias: [ { dia: "Segunda-feira", jogos: [...] }, ... ] }
   const dados = { dias: [] };
   for (const [dia, jogosArr] of Object.entries(all)) {
     dados.dias.push({ dia: dia.charAt(0).toUpperCase() + dia.slice(1), jogos: jogosArr });
@@ -228,7 +151,7 @@ module.exports = {
   nome: "jogos",
   descricao: "Comandos de jogos do Dynasty ES.",
 
-  // !updatejogos -> força fetch da LBE e salva no jogos.json
+  // !updatejogos
   async updatejogos(message) {
     const aviso = await message.channel.send("🔄 Atualizando jogos da LBE... aguarda aí.");
     try {
@@ -246,7 +169,7 @@ module.exports = {
     }
   },
 
-  // !jogos -> busca ao vivo nos campeonatos configurados e mostra organizado (fallback para local se nada encontrado)
+  // !jogos
   async jogos(message) {
     const aviso = await message.channel.send("🔎 Buscando jogos na LBE... pode demorar 1-3s");
     try {
@@ -255,11 +178,9 @@ module.exports = {
         const arr = await fetchCampeonato(cid);
         if (arr && arr.length) resultadosPorCamp[cid] = arr;
       }
-
       await aviso.delete().catch(()=>{});
 
       if (Object.keys(resultadosPorCamp).length === 0) {
-        // fallback para o local
         const dados = carregarJogos();
         const hoje = new Date();
         const diasSemana = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
@@ -278,9 +199,7 @@ module.exports = {
         return message.channel.send({ embeds: [embed] });
       }
 
-      // mandar um embed por campeonato (nome bonito se tiver)
       for (const [cid, jogosArr] of Object.entries(resultadosPorCamp)) {
-        // agrupa por rodada
         const grupos = {};
         for (const j of jogosArr) {
           const rodada = j.rodada || "—";
@@ -289,11 +208,7 @@ module.exports = {
         }
 
         let descricao = "";
-        for (const rodada of Object.keys(grupos).sort((a,b) => {
-          const na = parseInt(a) || 0;
-          const nb = parseInt(b) || 0;
-          return na - nb;
-        })) {
+        for (const rodada of Object.keys(grupos).sort((a,b) => (parseInt(a)||0) - (parseInt(b)||0))) {
           descricao += `**🏁 Rodada ${rodada}**\n`;
           for (const g of grupos[rodada]) {
             const left = g.leftName || "—";
@@ -320,7 +235,7 @@ module.exports = {
     }
   },
 
-  // !jogossem -> mostra os jogos na semana a partir do jogos.json (atualiza primeiro se quiser)
+  // !jogossem
   async jogossem(message) {
     const dados = carregarJogos();
     if (!dados.dias || !dados.dias.length) return message.reply("❌ Nenhum jogo cadastrado na semana.");
@@ -340,38 +255,74 @@ module.exports = {
     return message.channel.send({ embeds: [embed] });
   },
 
-  // !jogosprox -> mostra os jogos da próxima semana (com base no jogos.json)
+  // !jogosprox - puxando LBE
   async jogosprox(message) {
-    // simples: assume dados.dias contém dias da semana; rota para "próxima semana" - aqui vamos só enviar os mesmos dias com label "Próxima Semana"
-    const dados = carregarJogos();
-    if (!dados.dias || !dados.dias.length) return message.reply("❌ Nenhum jogo cadastrado pra próxima semana.");
-    const embed = new EmbedBuilder()
-      .setTitle("📆 Jogos - Próxima Semana")
-      .setColor("#7d00ff");
-    let descricao = "";
-    for (const dia of dados.dias) {
-      descricao += `**${dia.dia} (próxima)**\n`;
-      descricao += dia.jogos.map(j => {
-        const resultado = j.resultado || "❔";
-        return `• ${j.adversario} | Rodada: ${j.rodada || "—"} | ${j.campeonato} | ${j.data} - ${j.horario} | ${resultado}`;
-      }).join("\n");
-      descricao += "\n\n";
+    const aviso = await message.channel.send("🔎 Buscando jogos futuros na LBE... aguarda 1-3s");
+    try {
+      const hoje = new Date();
+      const resultadosFuturos = {};
+
+      for (const cid of CHAMP_IDS) {
+        const arr = await fetchCampeonato(cid);
+        if (!arr) continue;
+
+        for (const j of arr) {
+          if (!j.data) continue;
+          const parts = j.data.split("/").map(p => parseInt(p,10));
+          if (parts.length === 2) parts.push(hoje.getFullYear());
+          const jogoDate = new Date(parts[2], parts[1]-1, parts[0]);
+          if (jogoDate > hoje) {
+            const diaNome = weekdayPTFromDateStr(j.data);
+            if (!resultadosFuturos[diaNome]) resultadosFuturos[diaNome] = [];
+            resultadosFuturos[diaNome].push({
+              rodada: j.rodada || "",
+              adversario: (j.leftName && j.leftName.toLowerCase().includes("dynasty")) ? j.rightName : j.leftName,
+              campeonato: j.campeonato || CHAMP_MAP[j.campeonatoId] || `Campeonato ${j.campeonatoId}`,
+              data: j.data,
+              horario: j.horario || "",
+              resultado: j.placar ? `${j.placar} ${j.resultadoEmoji||""}` : null
+            });
+          }
+        }
+      }
+
+      await aviso.delete().catch(()=>{});
+
+      if (Object.keys(resultadosFuturos).length === 0)
+        return message.reply("❌ Não há jogos futuros encontrados na LBE.");
+
+      const embed = new EmbedBuilder()
+        .setTitle("📆 Jogos - Próxima Semana (LBE)")
+        .setColor("#7d00ff");
+
+      let descricao = "";
+      for (const dia of Object.keys(resultadosFuturos)) {
+        descricao += `**${dia}**\n`;
+        descricao += resultadosFuturos[dia].map(j => {
+          const res = j.resultado || "❔";
+          return `• ${j.adversario} | Rodada: ${j.rodada || "—"} | ${j.campeonato} | ${j.data} - ${j.horario} | ${res}`;
+        }).join("\n");
+        descricao += "\n\n";
+      }
+
+      embed.setDescription(descricao.trim());
+      return message.channel.send({ embeds: [embed] });
+    } catch (err) {
+      console.error("Erro no !jogosprox:", err);
+      await aviso.delete().catch(()=>{});
+      return message.reply("❌ Falha ao buscar jogos futuros na LBE.");
     }
-    embed.setDescription(descricao.trim());
-    return message.channel.send({ embeds: [embed] });
   },
 
-  // !jogo <dia> -> busca por dia específico
+  // !jogo <dia>
   async jogo(message, args) {
     if (!args.length) return message.reply("❌ Use: `!jogo <dia>` (segunda, terça, quinta, etc).");
     const diaInput = args[0].toLowerCase();
-    const diasAceitos = ["segunda", "segunda-feira", "terca", "terça", "terça-feira", "quarta", "quarta-feira", "quinta", "quinta-feira", "sexta", "sexta-feira", "sábado", "sabado", "domingo"];
+    const diasAceitos = ["segunda","segunda-feira","terca","terça","terça-feira","quarta","quarta-feira","quinta","quinta-feira","sexta","sexta-feira","sábado","sabado","domingo"];
     if (!diasAceitos.some(d => diaInput.includes(d))) return message.reply("❌ Dia inválido. Use segunda, terça, quinta, etc.");
-
     const dados = carregarJogos();
     const jogosDia = dados.dias.find(d => d.dia.toLowerCase().includes(diaInput));
     if (!jogosDia || !jogosDia.jogos.length) return message.reply(`❌ Nenhum jogo cadastrado para ${args[0]}.`);
-
     const embed = new EmbedBuilder()
       .setTitle(`📅 Jogos - ${jogosDia.dia}`)
       .setColor("#7d00ff")
@@ -380,13 +331,10 @@ module.exports = {
         return `**Adversário:** ${j.adversario} | **Rodada:** ${j.rodada || "—"} | **Campeonato:** ${j.campeonato} | ${j.data} - ${j.horario} | ${resultado}`;
       }).join("\n\n"))
       .setFooter({ text: "Dynasty ES 💜" });
-
     return message.channel.send({ embeds: [embed] });
   },
 
   // ===== comandos manuais já existentes =====
-
-  // !addresult <adversário> | <placar> | <vit/der/emp>
   async addresult(message, args) {
     if (args.length < 3) return message.reply("❌ Use: `!addresult <adversário> | <placar> | <vit/der/emp>`");
     const [adversario, placar, tipo] = args.join(" ").split("|").map(p => p.trim());
@@ -407,7 +355,6 @@ module.exports = {
     return message.reply(`✅ Resultado de **${adversario}** atualizado!`);
   },
 
-  // !editarjogo <adversário> | <campo> | <novo valor>
   async editarjogo(message, args) {
     if (args.length < 3) return message.reply("❌ Use: `!editarjogo <adversário> | <campo> | <novo valor>`");
     const [adversario, campo, ...valorArr] = args.join(" ").split("|").map(p => p.trim());
@@ -421,40 +368,16 @@ module.exports = {
             jogo[campo] = valor;
             encontrado = true;
             break;
-          }
+          } else return message.reply("❌ Campo inválido.");
         }
       }
     }
-    if (!encontrado) return message.reply("❌ Jogo não encontrado ou campo inválido.");
+    if (!encontrado) return message.reply("❌ Jogo não encontrado.");
     salvarJogos(dados);
     return message.reply(`✅ Jogo de **${adversario}** atualizado!`);
   },
-
-  // !modificarjogos <adv1> | <adv2> | <campo> | <novo valor>
-  async modificarjogos(message, args) {
-    if (args.length < 4) return message.reply("❌ Use: `!modificarjogos <adv1> | <adv2> | <campo> | <novo valor>`");
-    const partes = args.join(" ").split("|").map(p => p.trim());
-    const campo = partes[partes.length - 2];
-    const novoValor = partes[partes.length - 1];
-    const adversarios = partes.slice(0, partes.length - 2);
-    const dados = carregarJogos();
-    let alterados = 0;
-    for (const dia of dados.dias) {
-      for (const jogo of dia.jogos) {
-        if (adversarios.some(a => a.toLowerCase() === jogo.adversario.toLowerCase())) {
-          if (jogo.hasOwnProperty(campo)) {
-            jogo[campo] = novoValor;
-            alterados++;
-          }
-        }
-      }
-    }
-    if (alterados === 0) return message.reply("❌ Nenhum jogo correspondente encontrado ou campo inválido.");
-    salvarJogos(dados);
-    return message.reply(`✅ Campo **${campo}** atualizado para **${alterados}** jogos.`);
-  },
-
-  // !limparjogos -> limpa tudo
+  
+    // !limparjogos -> limpa todos os jogos
   async limparjogos(message) {
     salvarJogos({ dias: [] });
     return message.reply("🧹 Todos os jogos da semana foram removidos!");
@@ -503,5 +426,28 @@ module.exports = {
     if (!encontrado) return message.reply("❌ Jogo não encontrado.");
     salvarJogos(dados);
     return message.reply(`✅ Jogo de **${adversario}** removido!`);
+  },
+
+  // !modificarjogos <adv1> | <adv2> | <campo> | <novo valor>
+  async modificarjogos(message, args) {
+    if (args.length < 4) return message.reply("❌ Use: `!modificarjogos <adv1> | <adv2> | <campo> | <novo valor>`");
+    const partes = args.join(" ").split("|").map(p => p.trim());
+    const campo = partes[partes.length - 2];
+    const novoValor = partes[partes.length - 1];
+    const adversarios = partes.slice(0, partes.length - 2);
+    const dados = carregarJogos();
+    let alterados = 0;
+    for (const dia of dados.dias) {
+      for (const jogo of dia.jogos) {
+        if (adversarios.some(a => a.toLowerCase() === jogo.adversario.toLowerCase())) {
+          if (jogo.hasOwnProperty(campo)) {
+            jogo[campo] = novoValor;
+            alterados++;
+          }
+        }
+      }
+    }
+    if (alterados === 0) return message.reply("❌ Nenhum jogo correspondente encontrado ou campo inválido.");
+    salvarJogos(dados);
+    return message.reply(`✅ Campo **${campo}** atualizado para **${alterados}** jogos.`);
   }
-};
