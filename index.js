@@ -33,45 +33,6 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 3000;
 const urlPublica = process.env.PUBLIC_URL || null;
 
-// ====== GITHUB WEBHOOK (Auto deploy) ======
-app.post("/github-deploy", express.json(), (req, res) => {
-  try {
-    const body = req.body;
-    if (!body.commits || !body.commits.length) return res.sendStatus(200);
-
-    const canal = client.channels.cache.get(ALERT_CHANNEL_ID);
-    if (!canal) return res.sendStatus(500);
-
-    const mensagem = body.commits.map(c => `• ${c.id.substring(0,7)}: ${c.message}`).join("\n");
-    canal.send(`🚀 Novo deploy recebido:\n${mensagem}`);
-
-    return res.sendStatus(200);
-  } catch (err) {
-    console.error("❌ Erro webhook GitHub:", err);
-    return res.sendStatus(500);
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`🌐 Servidor rodando na porta ${PORT}`);
-  if (urlPublica) console.log(`🌐 URL pública (Uptime): ${urlPublica}`);
-});
-
-// ===== AUTO-PING ======
-if (urlPublica) {
-  setInterval(() => {
-    try {
-      https.get(urlPublica, (res) => {
-        console.log(`🔄 Ping enviado - Status: ${res.statusCode} - ${new Date().toLocaleTimeString()}`);
-      }).on("error", (err) => {
-        console.error("❌ Erro ao pingar URL:", err);
-      });
-    } catch (e) {
-      console.error("❌ Erro no ping automático:", e);
-    }
-  }, 5 * 60 * 1000);
-}
-
 // ===== CONFIG DO CLIENT (BOT) =====
 const client = new Client({
   intents: [
@@ -83,8 +44,10 @@ const client = new Client({
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
-// ===== READY =====
+let clientReady = false;
+
 client.once("ready", () => {
+  clientReady = true;
   console.log(`🤖 Bot conectado como ${client.user.tag}`);
   client.user.setActivity("Dynasty ES ⚽", { type: 0 });
 });
@@ -103,6 +66,21 @@ setInterval(() => {
     alertaEnviado = false;
   }
 }, 60 * 1000);
+
+// ===== AUTO-PING ======
+if (urlPublica) {
+  setInterval(() => {
+    try {
+      https.get(urlPublica, (res) => {
+        console.log(`🔄 Ping enviado - Status: ${res.statusCode} - ${new Date().toLocaleTimeString()}`);
+      }).on("error", (err) => {
+        console.error("❌ Erro ao pingar URL:", err);
+      });
+    } catch (e) {
+      console.error("❌ Erro no ping automático:", e);
+    }
+  }, 5 * 60 * 1000);
+}
 
 // ====== COMANDOS CUSTOM ======
 function getComandoCustom(command) {
@@ -216,8 +194,34 @@ client.on("messageCreate", async (message) => {
   }
 });
 
+// ====== GITHUB WEBHOOK (Auto deploy) ======
+app.post("/github-deploy", express.json(), (req, res) => {
+  try {
+    if (!clientReady) return res.status(503).send("Bot ainda não conectado");
+    const body = req.body;
+    if (!body.commits || !body.commits.length) return res.sendStatus(200);
+
+    const canal = client.channels.cache.get(ALERT_CHANNEL_ID);
+    if (!canal) return res.status(500).send("Canal não encontrado");
+
+    const mensagem = body.commits.map(c => `• ${c.id.substring(0,7)}: ${c.message}`).join("\n");
+    canal.send(`🚀 Novo deploy recebido:\n${mensagem}`);
+
+    return res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Erro webhook GitHub:", err);
+    return res.sendStatus(500);
+  }
+});
+
 // ===== LOGIN =====
 console.log("🔑 Logando bot...");
 client.login(process.env.TOKEN).catch(err =>
   console.error("❌ Falha ao logar:", err)
 );
+
+// ===== START SERVIDOR =====
+app.listen(PORT, () => {
+  console.log(`🌐 Servidor rodando na porta ${PORT}`);
+  if (urlPublica) console.log(`🌐 URL pública (Uptime): ${urlPublica}`);
+});
