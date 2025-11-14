@@ -120,17 +120,16 @@ client.on("messageCreate", async (message) => {
     // ========== JOGOS (AUTO LBE) ==========
     const jogosComandos = [
       "jogos","jogossem","jogo","addresult","editarjogo",
-      "modificarjogos","limparjogos","addjogos","removerjogo","updatejogos"
+      "modificarjogos","limparjogos","addjogos","removerjogo","updatejogos","jogosprox"
     ];
 
     if (jogosComandos.includes(command)) {
       if (command === "jogos") return jogos.jogos(message); // AUTO LBE
-      else if (command === "jogossem") return jogos.jogossem(message);
       else return jogos[command](message, args);
     }
 
     // ========== COMANDOS GERAIS ==========
-    if (command === "ping") return message.channel.send("🏓 To ON, cria!");
+    if (command === "ping") return message.channel.send("✅ To Online e Funcionando Cria");
     if (command === "serverinfo")
       return message.reply(`📊 Servidor: **${message.guild.name}**\n👥 Membros: **${message.guild.memberCount}**`);
     
@@ -160,17 +159,19 @@ client.on("messageCreate", async (message) => {
 ⚽ Jogos (Auto LBE)  
 • jogos (auto-fetch real da LBE)  
 • jogossem  
+• jogosprox  
 • jogo  
 • addresult • editarjogo  
 • modificarjogos  
 • limparjogos • addjogos • removerjogo  
+• updatejogos
 
 🛡 Admin  
 • ban • kick • mute • desmute  
 • say • sayembed • anunciar  
 • regras • addcomando • removercomando  
         `)
-        .setFooter({ text: "Dynasty ES • Bot Official" });
+        .setFooter({ text: "Dynasty ES • Bot Oficial" });
 
       return message.channel.send({ embeds: [embed] });
     }
