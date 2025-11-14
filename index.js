@@ -1,5 +1,5 @@
 // ==========================
-// INDEX.JS - DYNASTY ES (Auto LBE + Sistema de Notas + Admin)
+// INDEX.JS - DYNASTY ES (Auto LBE + Sistema de Notas + Admin + Auto Deploy)
 // ==========================
 
 const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require("discord.js");
@@ -32,6 +32,25 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 const urlPublica = process.env.PUBLIC_URL || null;
+
+// ====== GITHUB WEBHOOK (Auto deploy) ======
+app.post("/github-deploy", express.json(), (req, res) => {
+  try {
+    const body = req.body;
+    if (!body.commits || !body.commits.length) return res.sendStatus(200);
+
+    const canal = client.channels.cache.get(ALERT_CHANNEL_ID);
+    if (!canal) return res.sendStatus(500);
+
+    const mensagem = body.commits.map(c => `• ${c.id.substring(0,7)}: ${c.message}`).join("\n");
+    canal.send(`🚀 Novo deploy recebido:\n${mensagem}`);
+
+    return res.sendStatus(200);
+  } catch (err) {
+    console.error("❌ Erro webhook GitHub:", err);
+    return res.sendStatus(500);
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🌐 Servidor rodando na porta ${PORT}`);
