@@ -1,5 +1,5 @@
 // ==========================
-// INDEX.JS - DYNASTY ES (Render-friendly)
+// INDEX.JS - DYNASTY ES (Auto LBE + Sistema de Notas + Admin)
 // ==========================
 
 const { Client, GatewayIntentBits, Partials, EmbedBuilder } = require("discord.js");
@@ -8,9 +8,10 @@ const fs = require("fs");
 const https = require("https");
 const path = require("path");
 
+// ==== IMPORT DOS COMANDOS ====
 const admin = require("./comandos/admin.js");
 const notas = require("./comandos/notas.js");
-const jogos = require("./comandos/jogos.js");
+const jogos = require("./comandos/jogos.js"); // <-- NOVO FETCH AUTO
 
 const prefix = "!";
 
@@ -19,7 +20,7 @@ const ALERT_CHANNEL_ID = "1438189657954189503";
 const TEMPO_LIMITE = 10 * 60 * 1000; // 10 minutos sem ping
 let ultimoPing = null;
 
-// ====== MINI SERVIDOR (mantém o bot on) ======
+// ====== MINI SERVIDOR (Render) ======
 const app = express();
 
 app.get("/", (req, res) => {
@@ -33,7 +34,7 @@ const urlPublica = process.env.PUBLIC_URL || "https://dyn-bot.onrender.com";
 
 app.listen(PORT, () => {
   console.log(`🌐 Servidor rodando na porta ${PORT}`);
-  console.log(`🌐 URL pública (Uptime/AutoPing): ${urlPublica}`);
+  console.log(`🌐 URL pública (Uptime): ${urlPublica}`);
 });
 
 // ===== AUTO-PING ======
@@ -45,11 +46,11 @@ setInterval(() => {
       console.error("❌ Erro ao pingar URL:", err);
     });
   } catch (e) {
-    console.error("❌ Erro no setInterval do ping:", e);
+    console.error("❌ Erro no ping automático:", e);
   }
 }, 5 * 60 * 1000);
 
-// ====== CONFIG DO BOT ======
+// ===== CONFIG DO CLIENT (BOT) =====
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -60,36 +61,33 @@ const client = new Client({
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
-// ====== READY ======
+// ===== READY =====
 client.once("ready", () => {
   console.log(`🤖 Bot conectado como ${client.user.tag}`);
   client.user.setActivity("Dynasty ES ⚽", { type: 0 });
 });
 
-// ===== ALERTA DE INATIVIDADE ======
+// ===== ALERTA OFFLINE =====
 setInterval(() => {
   if (!ultimoPing) return;
   const diff = new Date() - ultimoPing;
 
   if (diff > TEMPO_LIMITE) {
-    console.log(`⚠️ Último ping > ${TEMPO_LIMITE/60000} min`);
     const canal = client.channels.cache.get(ALERT_CHANNEL_ID);
-    if (canal) canal.send(`⚠️ Atenção! Bot pode estar offline! Último ping > ${TEMPO_LIMITE/60000} min.`);
-  } else {
-    console.log(`✅ Ping ok - último há ${Math.floor(diff/1000)}s`);
+    if (canal) canal.send("⚠️ O bot pode ter ficado offline! Render sem ping!");
   }
 }, 60 * 1000);
 
-// ===== UTIL PARA COMANDOS CUSTOM =====
+// ====== COMANDOS CUSTOM ======
 function getComandoCustom(command) {
   const file = path.join(__dirname, "comandosCustom.json");
   if (!fs.existsSync(file)) return null;
+
   try {
     const data = JSON.parse(fs.readFileSync(file, "utf8"));
     if (!Array.isArray(data.comandosCustom)) return null;
     return data.comandosCustom.find(c => (c.nome || "").toLowerCase() === command);
-  } catch (e) {
-    console.error("❌ Erro ao ler comandosCustom.json:", e);
+  } catch {
     return null;
   }
 }
@@ -102,97 +100,89 @@ client.on("messageCreate", async (message) => {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const command = (args.shift() || "").toLowerCase();
 
-    // ================= ADMIN =================
-    const adminComandos = ["ban","kick","mute","desmute","limpar","say","sayembed","anunciar","regras","addcomando","remcomando","removercomando"];
-    if (adminComandos.includes(command)) return admin.executar(message.member, message, [command, ...args]);
+    // ========== ADMIN ==========
+    const adminComandos = [
+      "ban","kick","mute","desmute","limpar","say","sayembed",
+      "anunciar","regras","addcomando","remcomando","removercomando"
+    ];
+    if (adminComandos.includes(command))
+      return admin.executar(message.member, message, [command, ...args]);
 
-    // ================= NOTAS =================
-    const notasComandos = ["notas","notastabela","vernota","top","addjogador","remjogador","removerjogador","setpos","setstatus","avaliar","retirarnota","retnota","zerarnotas","addnota"];
-    if (notasComandos.includes(command)) return notas.executar(message, [command, ...args]);
+    // ========== NOTAS ==========
+    const notasComandos = [
+      "notas","notastabela","vernota","top","addjogador","remjogador",
+      "removerjogador","setpos","setstatus","avaliar","retirarnota",
+      "retnota","zerarnotas","addnota"
+    ];
+    if (notasComandos.includes(command))
+      return notas.executar(message, [command, ...args]);
 
-    // ================= JOGOS =================
-    const jogosComandos = ["jogos","jogossem","jogo","addresult","editarjogo","modificarjogos","limparjogos","addjogos","removerjogo"];
+    // ========== JOGOS (AUTO LBE) ==========
+    const jogosComandos = [
+      "jogos","jogossem","jogo","addresult","editarjogo",
+      "modificarjogos","limparjogos","addjogos","removerjogo"
+    ];
+
     if (jogosComandos.includes(command)) {
-      if (command === "jogos") await jogos.jogos(message);
-      else if (command === "jogossem") await jogos.jogossem(message);
-      else await jogos[command](message, args);
-      return;
+      if (command === "jogos") return jogos.jogos(message); // AUTO LBE
+      else if (command === "jogossem") return jogos.jogossem(message);
+      else return jogos[command](message, args);
     }
 
-    // ================= COMANDOS GERAIS =================
-    if (command === "ping") return message.channel.send("✅ To online e funcionando!");
-    if (command === "serverinfo") return message.reply(`📊 Servidor: **${message.guild.name}**\n👥 Membros: **${message.guild.memberCount}**\n🆔 ID: ${message.guild.id}`);
+    // ========== COMANDOS GERAIS ==========
+    if (command === "ping") return message.channel.send("🏓 To ON, cria!");
+    if (command === "serverinfo")
+      return message.reply(`📊 Servidor: **${message.guild.name}**\n👥 Membros: **${message.guild.memberCount}**`);
+    
     if (command === "userinfo") {
       const user = message.mentions.users.first() || message.author;
-      return message.reply(`👤 Usuário: **${user.username}**\n🆔 ID: ${user.id}\n📅 Criado em: ${user.createdAt.toLocaleDateString()}`);
+      return message.reply(`👤 Usuário: **${user.username}**\n🆔 ID: ${user.id}`);
     }
 
-    // ================= COMANDOS CUSTOM =================
+    // ========== CUSTOM ==========
     const cmdCustom = getComandoCustom(command);
     if (cmdCustom) return message.channel.send(cmdCustom.resposta);
 
-    // ================= !COMANDOS (embed) =================
+    // ========== LISTA DE COMANDOS ==========
     if (command === "comandos") {
       const embed = new EmbedBuilder()
-        .setTitle("📜 Lista de Comandos do Bot")
+        .setTitle("📜 Comandos do Bot")
         .setColor("#7d00ff")
-        .setDescription(
-`🛠️ Comandos Gerais
-• ping
-• serverinfo
-• userinfo
+        .setDescription(`
+🛠️ Gerais  
+• ping • serverinfo • userinfo  
 
-📋 Sistema de Notas
-• notas
-• notastabela
-• vernota
-• top
-• avaliar
-• addjogador
-• remjogador
-• removerjogador
-• setpos
-• setstatus
-• addnota
-• retirarnota / retnota
-• zerarnotas
+📝 Notas  
+• notas • vernota • top • avaliar  
+• addjogador • remjogador  
+• setpos • setstatus • zerarnotas  
 
-⚽ Jogos
-• jogos
-• jogossem
-• jogo
-• addresult
-• editarjogo
-• modificarjogos
-• limparjogos
-• addjogos
-• removerjogo
+⚽ Jogos (Auto LBE)  
+• jogos (auto-fetch real da LBE)  
+• jogossem  
+• jogo  
+• addresult • editarjogo  
+• modificarjogos  
+• limparjogos • addjogos • removerjogo  
 
-🛡️ Mod/Admin
-• ban
-• kick
-• mute
-• desmute
-• limpar
-• say
-• sayembed
-• anunciar
-• regras
-• addcomando
-• remcomando
-• removercomando`
-        )
-        .setFooter({ text: "Dynasty ES • Feito por Razerxz" });
+🛡 Admin  
+• ban • kick • mute • desmute  
+• say • sayembed • anunciar  
+• regras • addcomando • removercomando  
+        `)
+        .setFooter({ text: "Dynasty ES • Bot Official" });
 
       return message.channel.send({ embeds: [embed] });
     }
 
   } catch (err) {
-    console.error("❌ Erro no messageCreate:", err);
-    message.reply("❌ Ocorreu um erro interno.").catch(() => {});
+    console.error("❌ ERRO messageCreate:", err);
+    message.reply("❌ Erro interno.").catch(() => {});
   }
 });
 
-// ====== LOGIN ======
-console.log("🔑 Tentando logar no bot...");
-client.login(process.env.TOKEN).catch(err => console.error("❌ Falha ao logar:", err));
+// ===== LOGIN =====
+console.log("🔑 Logando bot...");
+client.login(process.env.TOKEN).catch(err =>
+  console.error("❌ Falha ao logar:", err)
+);
