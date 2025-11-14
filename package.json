@@ -1,22 +1,15 @@
 {
-  "name": "dynasty-bot",
+  "name": "dynasty-es-bot",
   "version": "1.0.0",
-  "description": "Bot do Discord Dynasty ES",
-  "engines": {
-    "node": "22.10.0"
-  },
+  "description": "Bot Dynasty ES",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "Razerxz7",
-  "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.24.2",
-    "express": "^5.1.0"
-    "axios": "^1.6.0"
-    "cheerios": "^1.0.0"
+    "axios": "^1.6.7",
+    "cheerio": "^1.0.0-rc.12",
+    "discord.js": "^14.14.1",
+    "express": "^4.18.2"
   }
 }
