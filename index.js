@@ -120,7 +120,7 @@ client.on("messageCreate", async (message) => {
     // ========== JOGOS (AUTO LBE) ==========
     const jogosComandos = [
       "jogos","jogossem","jogo","addresult","editarjogo",
-      "modificarjogos","limparjogos","addjogos","removerjogo"
+      "modificarjogos","limparjogos","addjogos","removerjogo","updatejogos"
     ];
 
     if (jogosComandos.includes(command)) {
