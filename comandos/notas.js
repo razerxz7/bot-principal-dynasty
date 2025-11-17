@@ -15,7 +15,24 @@ function salvarNotas(dados) {
     fs.writeFileSync(caminhoNotas, JSON.stringify(dados, null, 2));
 }
 
-// Função pra organizar por posição principal
+// Mapeamento de emoji por posição (só pra exibição)
+const emojiPos = {
+    "ST": "⚽",
+    "MC": "🎯",
+    "ALA": "🏃",
+    "ZAG": "🧱",
+    "GK": "🧤",
+    "Indefinido": "❔"
+};
+
+// Mapeamento de emoji de status (titular/reserva/disputa)
+const emojiStatus = {
+    "titular": "✅",
+    "reserva": "❌",
+    "disputa": "⚖️"
+};
+
+// Função pra organizar por posição principal (mantive sua lógica)
 function organizarPorPosicao(dados) {
     const categorias = {
         "ST": [],
@@ -49,17 +66,34 @@ module.exports = {
 
             for (const [pos, jogadores] of Object.entries(categorias)) {
                 if (jogadores.length === 0) continue;
-                const emoji = pos === "ST" ? "⚽" :
-                              pos === "MC" ? "🎯" :
-                              pos === "ALA" ? "🏃" :
-                              pos === "ZAG" ? "🧱" :
-                              pos === "GK" ? "🧤" : "❔";
-                descricao += `\n${emoji} **${pos}**\n`;
+
+                const posEmoji = emojiPos[pos] || emojiPos["Indefinido"];
+                descricao += `\n${posEmoji} **${pos}**\n`;
+
                 for (const j of jogadores) {
-                    const d = dados[j];
-                    const posicoesTxt = d.posicoes ? `${d.posicoes[0]}${d.posicoes.length > 1 ? " (" + d.posicoes.slice(1).join("/") + ")" : ""}` : "Indefinido";
-                    descricao += `**${j}** - Total: ${d.total} | Pontualidade: ${d.pontualidade} | Disponibilidade: ${d.disponibilidade} | Respeito: ${d.respeito} | Builds: ${d.builds} | Gameplay: ${d.gameplay} | Posição: ${posicoesTxt}\n`;
+                    const d = dados[j] || {};
+
+                    // normaliza status pra exibir o emoji correto
+                    const rawStatus = (d.status || "").toString().toLowerCase();
+                    const statusKey = rawStatus.includes("tit") ? "titular"
+                                     : rawStatus.includes("res") ? "reserva"
+                                     : "disputa"; // default
+                    const statusTxt = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
+                    const statusEmoji = emojiStatus[statusKey] || emojiStatus["disputa"];
+
+                    // exibe a posição principal com emoji (sem criar/alterar dados)
+                    const posicoesTxt = d.posicoes
+                        ? `${(emojiPos[d.posicoes[0]] || "❔")} ${d.posicoes[0]}${d.posicoes.length > 1 ? " (" + d.posicoes.slice(1).join("/") + ")" : ""}`
+                        : "❔ Indefinido";
+
+                    // monta a linha mantendo TODOS os campos que tu já tinha
+                    const linha =
+                        `${statusEmoji} **${j}** - ${statusTxt}\n` +
+                        `Total: ${d.total ?? 0} | Pontualidade: ${d.pontualidade ?? 0} | Disponibilidade: ${d.disponibilidade ?? 0} | Respeito: ${d.respeito ?? 0} | Builds: ${d.builds ?? 0} | Gameplay: ${d.gameplay ?? 0} | Posição: ${posicoesTxt}\n`;
+
+                    descricao += linha;
                 }
+
                 descricao += "----------------------\n";
             }
 
@@ -73,18 +107,24 @@ module.exports = {
 
         // =================== !NOTASTABELA ===================
         if (comando === "notastabela") {
+            const texto = Object.keys(dados)
+                .sort()
+                .map(j => {
+                    const d = dados[j];
+                    const rawStatus = (d.status || "").toString().toLowerCase();
+                    const statusKey = rawStatus.includes("tit") ? "titular"
+                                     : rawStatus.includes("res") ? "reserva"
+                                     : "disputa";
+                    const statusEmojiTxt = emojiStatus[statusKey] || emojiStatus["disputa"];
+                    const posicoesTxt = d.posicoes ? `${(emojiPos[d.posicoes[0]] || "❔")} ${d.posicoes[0]}` : "❔ Indefinido";
+                    return `${statusEmojiTxt} **${j}** | Total: ${d.total ?? 0} | ${posicoesTxt}`;
+                }).join("\n") || "Nenhum jogador cadastrado.";
+
             const embed = new EmbedBuilder()
                 .setTitle("📊 Tabela de Notas")
                 .setColor("#7d00ff")
-                .setDescription(
-                    Object.keys(dados)
-                        .sort()
-                        .map(j => {
-                            const d = dados[j];
-                            const posicoesTxt = d.posicoes ? `${d.posicoes[0]}${d.posicoes.length > 1 ? " (" + d.posicoes.slice(1).join("/") + ")" : ""}` : "Indefinido";
-                            return `**${j}** | Total: ${d.total} | Status: ${d.status} | Posição: ${posicoesTxt}`;
-                        }).join("\n") || "Nenhum jogador cadastrado."
-                );
+                .setDescription(texto);
+
             return message.channel.send({ embeds: [embed] });
         }
 
@@ -93,30 +133,57 @@ module.exports = {
             const nome = args.join(" ");
             if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
             const d = dados[nome];
-            const posicoesTxt = d.posicoes ? `${d.posicoes[0]}${d.posicoes.length > 1 ? " (" + d.posicoes.slice(1).join("/") + ")" : ""}` : "Indefinido";
+
+            const rawStatus = (d.status || "").toString().toLowerCase();
+            const statusKey = rawStatus.includes("tit") ? "titular"
+                             : rawStatus.includes("res") ? "reserva"
+                             : "disputa";
+            const statusEmojiTxt = emojiStatus[statusKey] || emojiStatus["disputa"];
+            const statusTxt = statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
+
+            const posicoesTxt = d.posicoes
+                ? d.posicoes.map(p => `${(emojiPos[p] || "❔")} ${p}`).join(", ")
+                : "❔ Indefinido";
+
             const embed = new EmbedBuilder()
                 .setTitle(`📌 Notas de ${nome}`)
                 .setColor("#7d00ff")
                 .setDescription(
-                    `Status: ${d.status}\nTotal: ${d.total}\n` +
-                    `Pontualidade: ${d.pontualidade}\nDisponibilidade: ${d.disponibilidade}\nRespeito: ${d.respeito}\nBuilds: ${d.builds}\nGameplay: ${d.gameplay}\nPosições: ${posicoesTxt}`
+                    `Status: ${statusEmojiTxt} ${statusTxt}\n` +
+                    `Total: ${d.total ?? 0}\n` +
+                    `Pontualidade: ${d.pontualidade ?? 0}\n` +
+                    `Disponibilidade: ${d.disponibilidade ?? 0}\n` +
+                    `Respeito: ${d.respeito ?? 0}\n` +
+                    `Builds: ${d.builds ?? 0}\n` +
+                    `Gameplay: ${d.gameplay ?? 0}\n` +
+                    `Posições: ${posicoesTxt}`
                 );
+
             return message.channel.send({ embeds: [embed] });
         }
 
         // =================== !TOP ===================
         if (comando === "top") {
             const top = Object.keys(dados)
-                .map(j => ({ nome: j, total: dados[j].total, posicoes: dados[j].posicoes || ["Indefinido"] }))
+                .map(j => ({ nome: j, total: dados[j].total ?? 0, posicoes: dados[j].posicoes || ["Indefinido"], status: dados[j].status || "" }))
                 .sort((a, b) => b.total - a.total)
                 .slice(0, 10);
+
+            const texto = top.map((j, i) => {
+                const rawStatus = (j.status || "").toString().toLowerCase();
+                const statusKey = rawStatus.includes("tit") ? "titular"
+                                 : rawStatus.includes("res") ? "reserva"
+                                 : "disputa";
+                const statusEmojiTxt = emojiStatus[statusKey] || emojiStatus["disputa"];
+                const posTxt = `${(emojiPos[j.posicoes[0]] || "❔")} ${j.posicoes[0]}`;
+                return `${i+1}. ${statusEmojiTxt} **${j.nome}** - ${j.total} pts | ${posTxt}`;
+            }).join("\n") || "Nenhum jogador cadastrado.";
+
             const embed = new EmbedBuilder()
                 .setTitle("🏆 Top 10 Jogadores")
                 .setColor("#7d00ff")
-                .setDescription(top.map((j, i) => {
-                    const posTxt = `${j.posicoes[0]}${j.posicoes.length > 1 ? " (" + j.posicoes.slice(1).join("/") + ")" : ""}`;
-                    return `${i+1}. **${j.nome}** - ${j.total} pts | Posição: ${posTxt}`;
-                }).join("\n") || "Nenhum jogador cadastrado.");
+                .setDescription(texto);
+
             return message.channel.send({ embeds: [embed] });
         }
 
@@ -125,7 +192,7 @@ module.exports = {
             const nome = args.join(" ");
             if (!nome) return message.reply("❌ Use: !addjogador <nome>");
             if (dados[nome]) return message.reply("❌ Jogador já existe.");
-            dados[nome] = { pontualidade: 0, disponibilidade: 0, respeito: 0, builds: 0, gameplay: 0, total: 0, status: "⚔️ Disputa posição", posicoes: ["Indefinido"] };
+            dados[nome] = { pontualidade: 0, disponibilidade: 0, respeito: 0, builds: 0, gameplay: 0, total: 0, status: "disputa", posicoes: ["Indefinido"] };
             salvarNotas(dados);
             return message.reply(`✅ Jogador **${nome}** adicionado!`);
         }
@@ -158,11 +225,18 @@ module.exports = {
         // =================== !SETSTATUS ===================
         if (comando === "setstatus") {
             const nome = args.shift();
-            const status = args.join(" ");
+            const statusInput = args.join(" ").toLowerCase();
+
             if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
+
+            // normaliza entrada pra um dos três valores
+            let status = "disputa";
+            if (statusInput.includes("tit")) status = "titular";
+            else if (statusInput.includes("res")) status = "reserva";
+
             dados[nome].status = status;
             salvarNotas(dados);
-            return message.reply(`✅ Status de **${nome}** atualizado para **${status}**!`);
+            return message.reply(`✅ Status de **${nome}** atualizado para **${emojiStatus[status]} ${status.charAt(0).toUpperCase() + status.slice(1)}**`);
         }
 
         // =================== !ADDNOTA ===================
@@ -174,7 +248,7 @@ module.exports = {
             if (!["pontualidade","disponibilidade","respeito","builds","gameplay"].includes(categoria)) return message.reply("❌ Categoria inválida.");
             if (isNaN(valor)) return message.reply("❌ Valor inválido.");
             dados[nome][categoria] = valor;
-            dados[nome].total = dados[nome].pontualidade + dados[nome].disponibilidade + dados[nome].respeito + dados[nome].builds + dados[nome].gameplay;
+            dados[nome].total = (dados[nome].pontualidade || 0) + (dados[nome].disponibilidade || 0) + (dados[nome].respeito || 0) + (dados[nome].builds || 0) + (dados[nome].gameplay || 0);
             salvarNotas(dados);
             return message.reply(`✅ Nota de **${nome}** atualizada: ${categoria} = ${valor}`);
         }
@@ -186,7 +260,7 @@ module.exports = {
             if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
             if (!["pontualidade","disponibilidade","respeito","builds","gameplay"].includes(categoria)) return message.reply("❌ Categoria inválida.");
             dados[nome][categoria] = 0;
-            dados[nome].total = dados[nome].pontualidade + dados[nome].disponibilidade + dados[nome].respeito + dados[nome].builds + dados[nome].gameplay;
+            dados[nome].total = (dados[nome].pontualidade || 0) + (dados[nome].disponibilidade || 0) + (dados[nome].respeito || 0) + (dados[nome].builds || 0) + (dados[nome].gameplay || 0);
             salvarNotas(dados);
             return message.reply(`🗑️ Nota de **${nome}** removida: ${categoria}`);
         }
@@ -205,7 +279,7 @@ module.exports = {
                         dados[j].builds = 0;
                         dados[j].gameplay = 0;
                         dados[j].total = 0;
-                        dados[j].status = "⚔️ Disputa posição";
+                        dados[j].status = "disputa";
                         dados[j].posicoes = ["Indefinido"];
                     }
                     salvarNotas(dados);
