@@ -167,6 +167,7 @@ client.on("messageCreate", async (message) => {
 • notas • vernota • top • avaliar  
 • addjogador • remjogador  
 • setpos • setstatus • zerarnotas  
+• reorganizar
 
 ⚽ Jogos  
 • jogos (auto LBE)  
