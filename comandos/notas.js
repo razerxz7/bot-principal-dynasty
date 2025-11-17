@@ -35,9 +35,9 @@ const emojiPos = {
 
 // Emojis de status
 const emojiStatus = {
-    "titular": "✅",
-    "reserva": "❌",
-    "disputa": "⚖️"
+    "Titular": "✅",
+    "Reserva": "❌",
+    "Disputa": "⚖️"
 };
 
 // Organização das posições no embed
