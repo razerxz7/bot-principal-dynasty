@@ -276,9 +276,9 @@ module.exports = {
             if (!dados[nome])
                 return message.reply("❌ Jogador não encontrado.");
 
-            let status = "disputa";
-            if (statusInput.includes("tit")) status = "titular";
-            if (statusInput.includes("res")) status = "reserva";
+            let status = "Disputa";
+            if (statusInput.includes("tit")) status = "Titular";
+            if (statusInput.includes("res")) status = "Reserva";
 
             dados[nome].status = status;
             salvarNotas(dados);
