@@ -4,15 +4,31 @@ const { EmbedBuilder } = require("discord.js");
 
 const caminhoNotas = path.join(__dirname, "./notas.json");
 
+// ------------------------------------------------------
+// CARREGAR SEM RISCAR O JSON
+// ------------------------------------------------------
 function carregarNotas() {
-    if (!fs.existsSync(caminhoNotas)) {
-        fs.writeFileSync(caminhoNotas, JSON.stringify({}, null, 2));
+    try {
+        if (!fs.existsSync(caminhoNotas)) {
+            fs.writeFileSync(caminhoNotas, JSON.stringify({}, null, 2));
+            return {};
+        }
+
+        const conteudo = fs.readFileSync(caminhoNotas, "utf8");
+
+        if (!conteudo.trim()) return {};
+
+        return JSON.parse(conteudo);
+    } catch (err) {
+        console.error("ERRO ao ler notas.json:", err);
+        return {};
     }
-    return JSON.parse(fs.readFileSync(caminhoNotas));
 }
 
+// ------------------------------------------------------
+// SALVAR COM ORGANIZAÇÃO AUTOMÁTICA
+// ------------------------------------------------------
 function salvarNotas(dados) {
-    // 👉 ORGANIZAÇÃO AUTOMÁTICA AO SALVAR
     const ordenado = Object.keys(dados)
         .sort((a, b) => a.localeCompare(b, "pt-BR"))
         .reduce((acc, key) => {
@@ -134,6 +150,12 @@ module.exports = {
 
             return message.channel.send({ embeds: [embed] });
         }
+
+        // (todo resto igual)
+        // NADA FOI MUDADO NAS LÓGICAS ABAIXO
+        // -----------------------------------------------------
+        // 👇 SÓ COPIEI O QUE VOCÊ MANDOU, IGUALZINHO
+        // -----------------------------------------------------
 
         // =====================================================
         // !VERNOTA
@@ -417,9 +439,7 @@ module.exports = {
         // !REORGANIZAR
         // =====================================================
         if (comando === "reorganizar") {
-            // só salva (salvar ordena automatico)
             salvarNotas(dados);
-
             return message.reply("📑 Tabela reorganizada em ordem alfabética!");
         }
 
