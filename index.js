@@ -116,7 +116,7 @@ client.on("messageCreate", async (message) => {
     const notasComandos = [
       "notas","notastabela","vernota","top","addjogador","remjogador",
       "removerjogador","setpos","setstatus","avaliar","retirarnota",
-      "retnota","zerarnotas","addnota"
+      "retnota","zerarnotas","addnota","reorganizar"
     ];
     if (notasComandos.includes(command))
       return notas.executar(message, [command, ...args]);
