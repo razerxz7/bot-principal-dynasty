@@ -82,9 +82,9 @@ module.exports = {
                     const rawStatus = (d.status || "").toLowerCase();
 
                     const statusKey =
-                        rawStatus.includes("tit") ? "titular" :
-                        rawStatus.includes("res") ? "reserva" :
-                        "disputa";
+                        rawStatus.includes("tit") ? "Titular" :
+                        rawStatus.includes("res") ? "Reserva" :
+                        "Disputa";
 
                     const posTxt = d.posicoes
                         ? `${emojiPos[d.posicoes[0]]} ${d.posicoes[0]}${d.posicoes.length > 1 ? " (" + d.posicoes.slice(1).join("/") + ")" : ""}`
