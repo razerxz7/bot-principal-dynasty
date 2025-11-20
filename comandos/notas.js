@@ -442,7 +442,53 @@ module.exports = {
             salvarNotas(dados);
             return message.reply("📑 Tabela reorganizada em ordem alfabética!");
         }
+// =====================================================
+// !AVALIARJOG - avaliar vários jogadores de uma vez
+// =====================================================
+if (comando === "avaliarjog") {
+    const entrada = args.join(" ");
 
-        return message.reply("❌ Comando inválido de notas.");
+    if (!entrada.includes("|"))
+        return message.reply("❌ Use: nome 1 1 1 1 1 | nome2 2 2 2 2 2 ...");
+
+    const blocos = entrada.split("|").map(b => b.trim());
+
+    let msgRetorno = "";
+
+    for (const bloco of blocos) {
+        const partes = bloco.split(" ").filter(x => x.trim() !== "");
+        const nome = partes.shift();
+
+        if (!dados[nome]) {
+            msgRetorno += `❌ **${nome}** não encontrado.\n`;
+            continue;
+        }
+
+        const valores = partes.map(v => Number(v));
+
+        if (valores.length !== 5 || valores.some(v => isNaN(v))) {
+            msgRetorno += `❌ Erro nas notas de **${nome}**.\n`;
+            continue;
+        }
+
+        [
+            dados[nome].pontualidade,
+            dados[nome].disponibilidade,
+            dados[nome].respeito,
+            dados[nome].builds,
+            dados[nome].gameplay
+        ] = valores;
+
+        dados[nome].total = valores.reduce((a, b) => a + b, 0);
+
+        msgRetorno += `✅ **${nome}** avaliado!\n`;
     }
-};
+
+    salvarNotas(dados);
+    return message.reply(msgRetorno || "Nenhuma avaliação realizada.");
+}
+
+// =====================================================
+// FIM — comando inválido
+// =====================================================
+return message.reply("❌ Comando inválido de notas.");
