@@ -4,8 +4,9 @@ const { EmbedBuilder } = require("discord.js");
 
 const caminhoNotas = path.join(__dirname, "./notas.json");
 
+//
 // ------------------------------------------------------
-// CARREGAR SEM RISCAR O JSON
+// CARREGAR JSON
 // ------------------------------------------------------
 function carregarNotas() {
     try {
@@ -15,7 +16,6 @@ function carregarNotas() {
         }
 
         const conteudo = fs.readFileSync(caminhoNotas, "utf8");
-
         if (!conteudo.trim()) return {};
 
         return JSON.parse(conteudo);
@@ -25,8 +25,9 @@ function carregarNotas() {
     }
 }
 
+//
 // ------------------------------------------------------
-// SALVAR COM ORGANIZAÇÃO AUTOMÁTICA
+// SALVAR JSON (ORGANIZADO)
 // ------------------------------------------------------
 function salvarNotas(dados) {
     const ordenado = Object.keys(dados)
@@ -39,7 +40,9 @@ function salvarNotas(dados) {
     fs.writeFileSync(caminhoNotas, JSON.stringify(ordenado, null, 2));
 }
 
-// Emojis de posição
+//
+// Emojis
+//
 const emojiPos = {
     "ST": "⚽",
     "MC": "🎯",
@@ -49,14 +52,15 @@ const emojiPos = {
     "Indefinido": "❔"
 };
 
-// Emojis de status
 const emojiStatus = {
     "Titular": "✅",
     "Reserva": "❌",
     "Disputa": "⚖️"
 };
 
-// Organização das posições no embed
+//
+// Organizar jogadores no embed do !notas
+//
 function organizarPorPosicao(dados) {
     const categorias = {
         "ST": [],
@@ -76,6 +80,10 @@ function organizarPorPosicao(dados) {
     return categorias;
 }
 
+//
+// ==========================================================
+// EXPORTAÇÃO DOS COMANDOS
+// ==========================================================
 module.exports = {
     async executar(message, args) {
         const comando = args.shift()?.toLowerCase();
@@ -131,9 +139,9 @@ module.exports = {
                     const rawStatus = (d.status || "").toLowerCase();
 
                     const statusKey =
-                        rawStatus.includes("tit") ? "titular" :
-                        rawStatus.includes("res") ? "reserva" :
-                        "disputa";
+                        rawStatus.includes("tit") ? "Titular" :
+                        rawStatus.includes("res") ? "Reserva" :
+                        "Disputa";
 
                     const posTxt = d.posicoes
                         ? `${emojiPos[d.posicoes[0]]} ${d.posicoes[0]}`
@@ -151,12 +159,6 @@ module.exports = {
             return message.channel.send({ embeds: [embed] });
         }
 
-        // (todo resto igual)
-        // NADA FOI MUDADO NAS LÓGICAS ABAIXO
-        // -----------------------------------------------------
-        // 👇 SÓ COPIEI O QUE VOCÊ MANDOU, IGUALZINHO
-        // -----------------------------------------------------
-
         // =====================================================
         // !VERNOTA
         // =====================================================
@@ -168,9 +170,9 @@ module.exports = {
             const rawStatus = (d.status || "").toLowerCase();
 
             const statusKey =
-                rawStatus.includes("tit") ? "titular" :
-                rawStatus.includes("res") ? "reserva" :
-                "disputa";
+                rawStatus.includes("tit") ? "Titular" :
+                rawStatus.includes("res") ? "Reserva" :
+                "Disputa";
 
             const posTxt = d.posicoes
                 ? d.posicoes.map(p => `${emojiPos[p]} ${p}`).join(", ")
@@ -211,9 +213,9 @@ module.exports = {
                 .map((j, i) => {
                     const raw = j.status.toLowerCase();
                     const statusKey =
-                        raw.includes("tit") ? "titular" :
-                        raw.includes("res") ? "reserva" :
-                        "disputa";
+                        raw.includes("tit") ? "Titular" :
+                        raw.includes("res") ? "Reserva" :
+                        "Disputa";
 
                     return `${i + 1}. ${emojiStatus[statusKey]} **${j.nome}** - ${j.total} pts | ${emojiPos[j.posicoes[0]]} ${j.posicoes[0]}`;
                 })
@@ -234,8 +236,7 @@ module.exports = {
             const nome = args.join(" ");
             if (!nome) return message.reply("❌ Use: !addjogador <nome>");
 
-            if (dados[nome])
-                return message.reply("❌ Jogador já existe.");
+            if (dados[nome]) return message.reply("❌ Jogador já existe.");
 
             dados[nome] = {
                 pontualidade: 0,
@@ -244,7 +245,7 @@ module.exports = {
                 builds: 0,
                 gameplay: 0,
                 total: 0,
-                status: "disputa",
+                status: "Disputa",
                 posicoes: ["Indefinido"]
             };
 
@@ -257,8 +258,7 @@ module.exports = {
         // =====================================================
         if (["remjogador", "removerjogador"].includes(comando)) {
             const nome = args.join(" ");
-            if (!dados[nome])
-                return message.reply("❌ Jogador não encontrado.");
+            if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
 
             delete dados[nome];
             salvarNotas(dados);
@@ -273,8 +273,7 @@ module.exports = {
             const nome = args.shift();
             const posicoesInput = args.join(" ").toUpperCase().split("/");
 
-            if (!dados[nome])
-                return message.reply("❌ Jogador não encontrado.");
+            if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
 
             const posValidas = ["ST", "MC", "ALA", "ZAG", "GK"];
             const filtradas = posicoesInput.filter(p => posValidas.includes(p)).slice(0, 3);
@@ -295,8 +294,7 @@ module.exports = {
             const nome = args.shift();
             const statusInput = args.join(" ").toLowerCase();
 
-            if (!dados[nome])
-                return message.reply("❌ Jogador não encontrado.");
+            if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
 
             let status = "Disputa";
             if (statusInput.includes("tit")) status = "Titular";
@@ -316,23 +314,21 @@ module.exports = {
             const categoria = args.shift();
             const valor = Number(args.shift());
 
-            if (!dados[nome])
-                return message.reply("❌ Jogador não encontrado.");
+            if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
+            if (isNaN(valor)) return message.reply("❌ Valor inválido.");
 
-            if (!["pontualidade", "disponibilidade", "respeito", "builds", "gameplay"].includes(categoria))
+            const validas = ["pontualidade", "disponibilidade", "respeito", "builds", "gameplay"];
+            if (!validas.includes(categoria))
                 return message.reply("❌ Categoria inválida.");
-
-            if (isNaN(valor))
-                return message.reply("❌ Valor inválido.");
 
             dados[nome][categoria] = valor;
 
             dados[nome].total =
-                (dados[nome].pontualidade || 0) +
-                (dados[nome].disponibilidade || 0) +
-                (dados[nome].respeito || 0) +
-                (dados[nome].builds || 0) +
-                (dados[nome].gameplay || 0);
+                dados[nome].pontualidade +
+                dados[nome].disponibilidade +
+                dados[nome].respeito +
+                dados[nome].builds +
+                dados[nome].gameplay;
 
             salvarNotas(dados);
 
@@ -346,20 +342,20 @@ module.exports = {
             const nome = args.shift();
             const categoria = args.shift();
 
-            if (!dados[nome])
-                return message.reply("❌ Jogador não encontrado.");
+            if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
 
-            if (!["pontualidade", "disponibilidade", "respeito", "builds", "gameplay"].includes(categoria))
+            const validas = ["pontualidade", "disponibilidade", "respeito", "builds", "gameplay"];
+            if (!validas.includes(categoria))
                 return message.reply("❌ Categoria inválida.");
 
             dados[nome][categoria] = 0;
 
             dados[nome].total =
-                (dados[nome].pontualidade || 0) +
-                (dados[nome].disponibilidade || 0) +
-                (dados[nome].respeito || 0) +
-                (dados[nome].builds || 0) +
-                (dados[nome].gameplay || 0);
+                dados[nome].pontualidade +
+                dados[nome].disponibilidade +
+                dados[nome].respeito +
+                dados[nome].builds +
+                dados[nome].gameplay;
 
             salvarNotas(dados);
 
@@ -392,7 +388,7 @@ module.exports = {
                             builds: 0,
                             gameplay: 0,
                             total: 0,
-                            status: "disputa",
+                            status: "Disputa",
                             posicoes: ["Indefinido"]
                         };
                     }
@@ -412,8 +408,7 @@ module.exports = {
         if (comando === "avaliar") {
             const nome = args.shift();
 
-            if (!dados[nome])
-                return message.reply("❌ Jogador não encontrado.");
+            if (!dados[nome]) return message.reply("❌ Jogador não encontrado.");
 
             const valores = args.map(v => Number(v));
 
@@ -442,53 +437,55 @@ module.exports = {
             salvarNotas(dados);
             return message.reply("📑 Tabela reorganizada em ordem alfabética!");
         }
-// =====================================================
-// !AVALIARJOG - avaliar vários jogadores de uma vez
-// =====================================================
-if (comando === "avaliarjog") {
-    const entrada = args.join(" ");
 
-    if (!entrada.includes("|"))
-        return message.reply("❌ Use: nome 1 1 1 1 1 | nome2 2 2 2 2 2 ...");
+        // =====================================================
+        // !AVALIARJOG (NOVO)
+        // =====================================================
+        if (comando === "avaliarjog") {
+            const entrada = args.join(" ");
 
-    const blocos = entrada.split("|").map(b => b.trim());
+            if (!entrada.includes("|"))
+                return message.reply("❌ Use: nome 1 1 1 1 1 | nome2 2 2 2 2 2 ...");
 
-    let msgRetorno = "";
+            const blocos = entrada.split("|").map(b => b.trim());
+            let msgRetorno = "";
 
-    for (const bloco of blocos) {
-        const partes = bloco.split(" ").filter(x => x.trim() !== "");
-        const nome = partes.shift();
+            for (const bloco of blocos) {
+                const partes = bloco.split(" ").filter(x => x.trim() !== "");
+                const nome = partes.shift();
 
-        if (!dados[nome]) {
-            msgRetorno += `❌ **${nome}** não encontrado.\n`;
-            continue;
+                if (!dados[nome]) {
+                    msgRetorno += `❌ **${nome}** não encontrado.\n`;
+                    continue;
+                }
+
+                const valores = partes.map(v => Number(v));
+
+                if (valores.length !== 5 || valores.some(v => isNaN(v))) {
+                    msgRetorno += `❌ Erro nas notas de **${nome}**.\n`;
+                    continue;
+                }
+
+                [
+                    dados[nome].pontualidade,
+                    dados[nome].disponibilidade,
+                    dados[nome].respeito,
+                    dados[nome].builds,
+                    dados[nome].gameplay
+                ] = valores;
+
+                dados[nome].total = valores.reduce((a, b) => a + b, 0);
+
+                msgRetorno += `✅ **${nome}** avaliado!\n`;
+            }
+
+            salvarNotas(dados);
+            return message.reply(msgRetorno || "Nenhuma avaliação realizada.");
         }
 
-        const valores = partes.map(v => Number(v));
-
-        if (valores.length !== 5 || valores.some(v => isNaN(v))) {
-            msgRetorno += `❌ Erro nas notas de **${nome}**.\n`;
-            continue;
-        }
-
-        [
-            dados[nome].pontualidade,
-            dados[nome].disponibilidade,
-            dados[nome].respeito,
-            dados[nome].builds,
-            dados[nome].gameplay
-        ] = valores;
-
-        dados[nome].total = valores.reduce((a, b) => a + b, 0);
-
-        msgRetorno += `✅ **${nome}** avaliado!\n`;
+        // =====================================================
+        // COMANDO INVÁLIDO
+        // =====================================================
+        return message.reply("❌ Comando inválido de notas.");
     }
-
-    salvarNotas(dados);
-    return message.reply(msgRetorno || "Nenhuma avaliação realizada.");
-}
-
-// =====================================================
-// FIM — comando inválido
-// =====================================================
-return message.reply("❌ Comando inválido de notas.");
+};
