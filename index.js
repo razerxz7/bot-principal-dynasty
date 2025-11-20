@@ -116,7 +116,7 @@ client.on("messageCreate", async (message) => {
     const notasComandos = [
       "notas","notastabela","vernota","top","addjogador","remjogador",
       "removerjogador","setpos","setstatus","avaliar","retirarnota",
-      "retnota","zerarnotas","addnota","reorganizar"
+      "retnota","zerarnotas","addnota","reorganizar","avaliarjog"
     ];
     if (notasComandos.includes(command))
       return notas.executar(message, [command, ...args]);
@@ -167,7 +167,7 @@ client.on("messageCreate", async (message) => {
 • notas • vernota • top • avaliar  
 • addjogador • remjogador  
 • setpos • setstatus • zerarnotas  
-• reorganizar
+• reorganizar • avaliarjog
 
 ⚽ Jogos  
 • jogos (auto LBE)  
